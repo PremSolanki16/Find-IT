@@ -1,0 +1,262 @@
+.claim-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xl);
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--color-border-light);
+  gap: var(--space-lg);
+}
+
+.claim-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.claim-id-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-xs);
+}
+
+.claim-id-label {
+  color: var(--color-text-muted);
+}
+
+.claim-id-val {
+  font-family: var(--font-mono);
+  color: var(--color-text-main);
+  font-weight: var(--font-weight-semibold);
+}
+
+.claim-card-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--space-xl);
+}
+
+.claim-item-section {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.claim-item-thumb-wrap {
+  width: 90px;
+  height: 90px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-light);
+}
+
+.claim-item-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.claim-found-label {
+  font-size: var(--font-size-2xs);
+  text-transform: uppercase;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.05em;
+}
+
+.claim-item-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  margin: 2px 0 6px 0;
+}
+
+.claim-item-title a {
+  color: var(--color-text-heading);
+}
+
+.claim-item-title a:hover {
+  color: var(--color-primary);
+}
+
+.claim-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-bit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.claim-counterpart-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  background-color: var(--color-bg-card-hover);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+}
+
+.section-subhead {
+  font-size: var(--font-size-2xs);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.user-mini-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.user-mini-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+}
+
+.user-mini-names {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-display-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-heading);
+}
+
+.user-email-display {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* Answers block */
+.claim-answers-container {
+  background-color: var(--color-bg-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-base);
+}
+
+.answers-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.answers-heading {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-heading);
+}
+
+.answers-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.answers-list {
+  margin-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.qa-block {
+  background-color: var(--color-bg-card);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+}
+
+.qa-question {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-heading);
+  margin-bottom: 2px;
+}
+
+.qa-answer {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-body);
+  font-style: italic;
+}
+
+.review-note-box {
+  padding: var(--space-sm);
+  background-color: var(--color-primary-light);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-hover);
+}
+
+/* Actions footer */
+.claim-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.action-buttons-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.pending-wait-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-warning-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.accepted-ready-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-success-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.completed-label-badge {
+  font-size: var(--font-size-xs);
+  color: var(--color-success-text);
+  background-color: var(--color-success-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+}
+
+.rejected-label-badge {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger-text);
+  background-color: var(--color-danger-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+}
+
+@media (max-width: 768px) {
+  .claim-card-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+}
+

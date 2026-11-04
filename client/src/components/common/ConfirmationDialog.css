@@ -1,0 +1,39 @@
+.confirm-dialog-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-xs) 0;
+}
+
+.confirm-icon-wrapper {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-icon-wrapper.confirm-danger {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.confirm-icon-wrapper.confirm-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.confirm-icon-wrapper.confirm-primary {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.confirm-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+  line-height: var(--line-height-base);
+  margin: 0;
+}
+

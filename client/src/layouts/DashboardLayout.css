@@ -1,0 +1,50 @@
+.dashboard-layout-root {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-bg-page);
+}
+
+.dashboard-main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.dashboard-content-body {
+  flex: 1;
+  padding: var(--space-2xl);
+  max-width: var(--max-width-container);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.dashboard-mobile-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-backdrop);
+  z-index: var(--z-modal);
+  display: flex;
+}
+
+.mobile-sidebar-drawer {
+  width: var(--sidebar-width);
+  height: 100%;
+}
+
+.mobile-sidebar-drawer .dashboard-sidebar {
+  display: flex;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .dashboard-content-body {
+    padding: var(--space-base);
+  }
+}
+

@@ -1,0 +1,41 @@
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-4xl) var(--space-xl);
+  background-color: var(--color-bg-card);
+  border: 1px dashed var(--color-border-medium);
+  border-radius: var(--radius-xl);
+  width: 100%;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+  color: var(--color-text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-heading);
+  margin-bottom: var(--space-xs);
+}
+
+.empty-state-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  max-width: 440px;
+  margin-bottom: var(--space-lg);
+  line-height: var(--line-height-base);
+}
+
+.empty-state-action {
+  margin-top: var(--space-xs);
+}
+

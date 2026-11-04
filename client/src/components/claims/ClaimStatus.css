@@ -1,0 +1,112 @@
+.claim-status-timeline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-base);
+  background-color: var(--color-bg-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.claim-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeline-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.claim-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  text-align: center;
+}
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--color-bg-card);
+  border: 2px solid var(--color-border-medium);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all var(--transition-fast);
+}
+
+.step-label {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}
+
+.step-connector {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-border-medium);
+  z-index: 1;
+}
+
+/* States */
+.timeline-step.done .step-circle {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+  color: #ffffff;
+}
+
+.timeline-step.done .step-label {
+  color: var(--color-text-main);
+  font-weight: var(--font-weight-semibold);
+}
+
+.timeline-step.done .step-connector {
+  background-color: var(--color-success);
+}
+
+.timeline-step.active .step-circle {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+}
+
+.timeline-step.active .step-label {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.timeline-step.rejected .step-circle {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.timeline-step.cancelled .step-circle {
+  background-color: var(--color-text-muted);
+  border-color: var(--color-text-muted);
+  color: #ffffff;
+}
+

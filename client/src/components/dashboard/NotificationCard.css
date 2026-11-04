@@ -1,0 +1,100 @@
+.notification-card {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-base);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  background-color: var(--color-bg-card);
+  transition: all var(--transition-fast);
+  margin-bottom: var(--space-sm);
+}
+
+.notification-card.unread {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-subtle);
+}
+
+.notification-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-border-medium);
+}
+
+.notif-icon-col {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.notification-card.unread .notif-icon-col {
+  background-color: #ffffff;
+}
+
+.notif-main-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.notif-title-link {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-heading);
+}
+
+.notif-title-link:hover {
+  color: var(--color-primary);
+}
+
+.notif-timestamp {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-light);
+}
+
+.notif-body-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-body);
+  margin-bottom: var(--space-sm);
+  line-height: 1.4;
+}
+
+.notif-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.notif-view-btn {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.notif-mark-btn {
+  background: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.notif-mark-btn:hover {
+  color: var(--color-primary);
+}
+

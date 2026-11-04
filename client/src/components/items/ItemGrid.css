@@ -1,0 +1,14 @@
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-xl);
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .item-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+

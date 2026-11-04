@@ -1,0 +1,153 @@
+.image-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+  width: 100%;
+}
+
+.image-upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.image-upload-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-main);
+}
+
+.image-count-indicator {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.image-dropzone {
+  border: 2px dashed var(--color-border-medium);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  background-color: var(--color-bg-card-hover);
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.image-dropzone:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.dropzone-prompt {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-main);
+}
+
+.dropzone-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.image-presets-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.preset-label {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.preset-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-chip-btn {
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-body);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.preset-chip-btn:hover:not(:disabled) {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+}
+
+.preset-chip-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-previews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-xs);
+}
+
+.image-preview-card {
+  position: relative;
+  height: 110px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border-medium);
+  box-shadow: var(--shadow-xs);
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-preview-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.remove-preview-btn:hover {
+  background-color: var(--color-danger);
+}
+
+.primary-photo-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  font-size: 9px;
+  text-align: center;
+  padding: 2px;
+  font-weight: var(--font-weight-medium);
+}
+

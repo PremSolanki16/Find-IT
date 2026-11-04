@@ -1,0 +1,73 @@
+.message-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  width: 100%;
+}
+
+.message-bubble-row.mine {
+  justify-content: flex-end;
+}
+
+.message-bubble-row.theirs {
+  justify-content: flex-start;
+}
+
+.bubble-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-bottom: 18px;
+}
+
+.bubble-content-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.message-bubble-row.mine .bubble-content-wrap {
+  align-items: flex-end;
+}
+
+.message-bubble-row.theirs .bubble-content-wrap {
+  align-items: flex-start;
+}
+
+.bubble-sender-name {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+  padding-left: var(--space-xs);
+}
+
+.bubble-text {
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.message-bubble-row.mine .bubble-text {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-bottom-right-radius: var(--radius-xs);
+}
+
+.message-bubble-row.theirs .bubble-text {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-main);
+  border-bottom-left-radius: var(--radius-xs);
+}
+
+.bubble-timestamp {
+  font-size: 10px;
+  color: var(--color-text-light);
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
