@@ -37,24 +37,42 @@ import ManageClaims from './pages/Admin/ManageClaims';
 import ManageReports from './pages/Admin/ManageReports';
 
 // Route Guards
+
+// Route Guards
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthLoading } = useAuth();
+
+  // Wait until backend validates the saved token
+  if (isAuthLoading) {
+    return null;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
   return children;
 };
 
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isAuthLoading } = useAuth();
+
+  // Wait until backend validates the saved token
+  if (isAuthLoading) {
+    return null;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
+
   return children;
 };
+
 
 export const App = () => {
   return (

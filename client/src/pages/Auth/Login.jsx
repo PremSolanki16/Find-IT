@@ -33,23 +33,24 @@ export const Login = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setGeneralError('');
-    if (!validate()) return;
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setGeneralError('');
+  if (!validate()) return;
 
-    setIsLoading(true);
-    try {
-      // Simulate network request
-      await new Promise(r => setTimeout(r, 400));
-      login(email, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setGeneralError(err.message || 'Login failed. Please check credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  setIsLoading(true);
+
+  try {
+    await login(email.trim().toLowerCase(), password);
+    navigate('/dashboard');
+  } catch (err) {
+    setGeneralError(err.message || 'Login failed. Please check credentials.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   // Quick Demo fill helpers
   const fillAsUser = () => {

@@ -43,24 +43,25 @@ export const Signup = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setGeneralError('');
-    if (!validate()) return;
+  e.preventDefault();
+  setGeneralError('');
+  if (!validate()) return;
 
-    setIsLoading(true);
-    try {
-      await new Promise(r => setTimeout(r, 450));
-      signup({
-        name: name.trim(),
-        email: email.trim()
-      });
-      navigate('/dashboard');
-    } catch (err) {
-      setGeneralError(err.message || 'Signup failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  setIsLoading(true);
+  try {
+    await signup({
+      name: name.trim(),
+      email: email.trim(),
+      password
+    });
+
+    navigate('/login');
+  } catch (err) {
+    setGeneralError(err.message || 'Signup failed. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="auth-form-inner">
