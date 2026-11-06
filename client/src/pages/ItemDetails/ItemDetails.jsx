@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getItemByIdApi } from '../../services/api';
 import { useData } from '../../hooks/useData';
 import { useAuth } from '../../hooks/useAuth';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -20,18 +21,44 @@ import './ItemDetails.css';
 export const ItemDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { items, claims, submitReport } = useData();
-  const { currentUser, availableUsers, isAuthenticated } = useAuth();
+  const { claims, submitReport } = useData();
+  const { currentUser, isAuthenticated } = useAuth();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState('spam');
   const [reportDetails, setReportDetails] = useState('');
   const [reportSuccess, setReportSuccess] = useState(false);
+  // Store the item fetched from the backend
+const [item, setItem] = useState(null);
 
-  const item = items.find(i => i._id === id);
+// Track whether the item is still loading
+const [isLoading, setIsLoading] = useState(true);
 
-  if (!item) {
+// Store any error while fetching the item
+const [itemError, setItemError] = useState('');
+
+// Fetch the requested item from the backend
+useEffect(() => {
+  const fetchItem = async () => {
+    try {
+      const response = await getItemByIdApi(id);
+      setItem(response.item);
+    } catch (error) {
+      setItemError(error.message || 'Failed to load item.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchItem();
+}, [id]);
+
+  if (isLoading) {
+    return <div className="container section-py">Loading item...</div>;
+  }
+
+if (!item) {
     return (
       <div className="container section-py">
         <div className="card item-not-found-card">
@@ -45,20 +72,21 @@ export const ItemDetails = () => {
     );
   }
 
-  const poster = availableUsers.find(u => u._id === item.createdBy) || {
+  // Get the poster details from the backend item
+const poster = item.createdBy || {
     name: 'Campus Member',
-    email: 'member@findit.edu',
     avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-    createdAt: '2026-09-01'
-  };
+    createdAt: null
+};
 
   const images = (item.imageUrls && item.imageUrls.length > 0)
     ? item.imageUrls
     : ['https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=800&q=80'];
 
-  const isMyPost = currentUser?._id === item.createdBy;
+  // Check whether the logged-in user created this item
+const isMyPost = currentUser?._id === item.createdBy?._id;
 
-  // Check if current user already claimed this found item
+// Check if current user already claimed this found item
   const existingClaim = claims.find(c => c.itemId === item._id && c.claimantId === currentUser?._id);
 
   const handleClaimClick = () => {

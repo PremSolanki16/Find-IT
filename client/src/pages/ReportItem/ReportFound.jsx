@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
+import { createItemApi } from '../../services/api';
 import Input from '../../components/common/Input';
 import FormField from '../../components/common/FormField';
 import Button from '../../components/common/Button';
@@ -12,8 +11,7 @@ import { validateRequired } from '../../utils/validators';
 import './ReportItem.css';
 
 export const ReportFound = () => {
-  const { addItem } = useData();
-  const { currentUser, isAuthenticated } = useAuth();
+  
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
@@ -61,35 +59,42 @@ export const ReportFound = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+  // Submit the found item details and private clues to the backend
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
 
-    setIsSubmitting(true);
-    try {
-      await new Promise(r => setTimeout(r, 400));
-      const filteredClues = privateClues.map(c => c.trim()).filter(Boolean);
+      setIsSubmitting(true);
 
-      const newItem = addItem({
-        type: 'found',
-        title: title.trim(),
-        category,
-        description: description.trim(),
-        locationName: locationName.trim(),
-        locationDetails: locationDetails.trim(),
-        eventDate,
-        imageUrls: images,
-        privateClues: filteredClues
-      });
+      try {
+          const filteredClues = privateClues
+              .map((clue) => clue.trim())
+              .filter(Boolean);
 
-      setSuccessMessage('Your found item post is now live!');
-      setTimeout(() => {
-        navigate(`/items/${newItem._id}`);
-      }, 1200);
-    } catch (err) {
-      setErrors({ form: err.message || 'Failed to submit post.' });
-      setIsSubmitting(false);
-    }
+          const response = await createItemApi({
+              type: 'found',
+              title: title.trim(),
+              category,
+              description: description.trim(),
+              locationName: locationName.trim(),
+              locationDetails: locationDetails.trim(),
+              eventDate,
+              imageUrls: images.filter((image) => image.startsWith('http')),
+              privateClues: filteredClues
+          });
+
+          const newItem = response.item;
+
+          setSuccessMessage('Your found item post is now live!');
+
+          setTimeout(() => {
+              navigate(`/items/${newItem._id}`);
+          }, 1200);
+
+      } catch (err) {
+          setErrors({ form: err.message || 'Failed to submit post.' });
+          setIsSubmitting(false);
+      }
   };
 
   return (

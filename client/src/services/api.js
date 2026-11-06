@@ -45,3 +45,23 @@ export const getCurrentUser = (token) => {
         }
     });
 };
+
+// Create a new lost or found item
+export const createItemApi = (itemData) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/items", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(itemData)
+    });
+};
+
+// Get a single item by its ID from the backend
+export const getItemByIdApi = (itemId) => {
+    return apiRequest(`/items/${itemId}`, {
+        method: "GET"
+    });
+};

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
+import { createItemApi } from '../../services/api';
 import Input from '../../components/common/Input';
 import FormField from '../../components/common/FormField';
 import Button from '../../components/common/Button';
@@ -11,8 +10,7 @@ import { validateRequired } from '../../utils/validators';
 import './ReportItem.css';
 
 export const ReportLost = () => {
-  const { addItem } = useData();
-  const { currentUser, isAuthenticated } = useAuth();
+  
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
@@ -48,34 +46,38 @@ export const ReportLost = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+  e.preventDefault();
+  if (!validate()) return;
 
-    setIsSubmitting(true);
-    try {
-      await new Promise(r => setTimeout(r, 400));
-      const newItem = addItem({
-        type: 'lost',
-        title: title.trim(),
-        category,
-        description: description.trim(),
-        locationName: locationName.trim(),
-        locationDetails: locationDetails.trim(),
-        eventDate,
-        imageUrls: images,
-        isRewardOffered,
-        rewardDetails: isRewardOffered ? rewardDetails.trim() : ''
-      });
+  setIsSubmitting(true);
 
-      setSuccessMessage('Your lost item report has been published!');
-      setTimeout(() => {
-        navigate(`/items/${newItem._id}`);
-      }, 1200);
-    } catch (err) {
-      setErrors({ form: err.message || 'Failed to submit post.' });
-      setIsSubmitting(false);
-    }
-  };
+  try {
+    const response = await createItemApi({
+      type: 'lost',
+      title: title.trim(),
+      category,
+      description: description.trim(),
+      locationName: locationName.trim(),
+      locationDetails: locationDetails.trim(),
+      eventDate,
+      imageUrls: images.filter((image) => image.startsWith('http')),
+      isRewardOffered,
+      rewardDetails: isRewardOffered ? rewardDetails.trim() : ''
+    });
+
+    const newItem = response.item;
+
+    setSuccessMessage('Your lost item report has been published!');
+
+    setTimeout(() => {
+      navigate(`/items/${newItem._id}`);
+    }, 1200);
+
+  } catch (err) {
+    setErrors({ form: err.message || 'Failed to submit post.' });
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="report-item-page section-py">
