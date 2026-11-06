@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createItemApi } from '../../services/api';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createItemApi, getItemByIdApi, updateItemApi } from '../../services/api';
 import Input from '../../components/common/Input';
 import FormField from '../../components/common/FormField';
 import Button from '../../components/common/Button';
@@ -12,7 +12,8 @@ import './ReportItem.css';
 export const ReportLost = () => {
   
   const navigate = useNavigate();
-
+  // Get the item ID when the form is opened in edit mode
+  const { id } = useParams();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('electronics');
   const [description, setDescription] = useState('');
@@ -26,7 +27,40 @@ export const ReportLost = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isLoadingItem, setIsLoadingItem] = useState(Boolean(id));
 
+  // Fetch the existing lost item and populate the form for editing
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchItem = async () => {
+      try {
+        const response = await getItemByIdApi(id);
+        const item = response.item;
+
+        if (item.type !== 'lost') {
+          navigate('/dashboard/my-lost-items');
+          return;
+        }
+
+        setTitle(item.title || '');
+        setCategory(item.category || 'electronics');
+        setDescription(item.description || '');
+        setLocationName(item.locationName || '');
+        setLocationDetails(item.locationDetails || '');
+        setEventDate(item.eventDate ? item.eventDate.split('T')[0] : '');
+        setImages(item.imageUrls || []);
+        setIsRewardOffered(item.isRewardOffered || false);
+        setRewardDetails(item.rewardDetails || '');
+      } catch (error) {
+        setErrors({ form: error.message || 'Failed to load item details.' });
+      } finally {
+        setIsLoadingItem(false);
+      }
+    };
+
+    fetchItem();
+  }, [id, navigate]);
   const validate = () => {
     const errs = {};
     const titleErr = validateRequired(title, 'Item Name');
@@ -44,16 +78,15 @@ export const ReportLost = () => {
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
-
+  // Create a new lost item or update the existing item in edit mode
+  
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validate()) return;
+    e.preventDefault();
+    if (!validate()) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const response = await createItemApi({
-      type: 'lost',
+    const itemData = {
       title: title.trim(),
       category,
       description: description.trim(),
@@ -63,21 +96,42 @@ export const ReportLost = () => {
       imageUrls: images.filter((image) => image.startsWith('http')),
       isRewardOffered,
       rewardDetails: isRewardOffered ? rewardDetails.trim() : ''
-    });
+    };
 
-    const newItem = response.item;
+    try {
+      if (id) {
+        await updateItemApi(id, itemData);
+        setSuccessMessage('Your lost item report has been updated!');
+      } else {
+        const response = await createItemApi({
+          type: 'lost',
+          ...itemData
+        });
 
-    setSuccessMessage('Your lost item report has been published!');
+        setSuccessMessage('Your lost item report has been published!');
 
-    setTimeout(() => {
-      navigate(`/items/${newItem._id}`);
-    }, 1200);
+        setTimeout(() => {
+          navigate(`/items/${response.item._id}`);
+        }, 1200);
 
-  } catch (err) {
-    setErrors({ form: err.message || 'Failed to submit post.' });
-    setIsSubmitting(false);
+        return;
+      }
+
+      setTimeout(() => {
+        navigate(`/items/${id}`);
+      }, 1200);
+
+    } catch (err) {
+      setErrors({ form: err.message || 'Failed to save item.' });
+      setIsSubmitting(false);
+    }
+  };
+
+  // Show a loading message while existing item details are being fetched
+  if (isLoadingItem) {
+    return <div className="report-item-page section-py">Loading item details...</div>;
   }
-};
+
 
   return (
     <div className="report-item-page section-py">
@@ -231,7 +285,7 @@ export const ReportLost = () => {
                 size="lg" 
                 isLoading={isSubmitting}
               >
-                Publish Lost Report
+                {id ? 'Save Changes' : 'Publish Lost Report'}
               </Button>
             </div>
           </form>

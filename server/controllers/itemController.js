@@ -140,6 +140,55 @@ const getItemById = async (req, res) => {
     }
 };
 
+    // Get item details for editing after verifying ownership
+    const getItemForEdit = async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const item = await Item.findById(id);
+
+            if (!item) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Item not found"
+                });
+            }
+
+            if (item.createdBy.toString() !== req.user.id) {
+                return res.status(403).json({
+                    success: false,
+                    message: "You are not authorized to edit this item"
+                });
+            }
+
+            if (item.status !== "open") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Only open items can be edited"
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                item
+            });
+
+        } catch (error) {
+            if (error.name === "CastError") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid item ID"
+                });
+            }
+
+            res.status(500).json({
+                success: false,
+                message: "Failed to fetch item for editing"
+            });
+        }
+    };
+
+
 // Update an existing item
 const updateItem = async (req, res) => {
     try {
@@ -299,6 +348,7 @@ module.exports = {
     createItem,
     getAllItems,
     getItemById,
+    getItemForEdit,
     updateItem,
     deleteItem
 };

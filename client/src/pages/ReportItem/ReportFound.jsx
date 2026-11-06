@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createItemApi } from '../../services/api';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createItemApi, getItemForEditApi, updateItemApi } from '../../services/api';
 import Input from '../../components/common/Input';
 import FormField from '../../components/common/FormField';
 import Button from '../../components/common/Button';
@@ -13,6 +13,8 @@ import './ReportItem.css';
 export const ReportFound = () => {
   
   const navigate = useNavigate();
+  // Get the item ID when the form is opened in edit mode
+  const { id } = useParams();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('accessories');
@@ -28,6 +30,39 @@ export const ReportFound = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isLoadingItem, setIsLoadingItem] = useState(Boolean(id));
+
+// Fetch the existing found item and populate the form for editing
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchItem = async () => {
+      try {
+        const response = await getItemForEditApi(id);
+        const item = response.item;
+
+        if (item.type !== 'found') {
+          navigate('/dashboard/found-items');
+          return;
+        }
+
+        setTitle(item.title || '');
+        setCategory(item.category || 'accessories');
+        setDescription(item.description || '');
+        setLocationName(item.locationName || '');
+        setLocationDetails(item.locationDetails || '');
+        setEventDate(item.eventDate ? item.eventDate.split('T')[0] : '');
+        setImages(item.imageUrls || []);
+        setPrivateClues(item.privateClues?.length ? item.privateClues : ['']);
+      } catch (error) {
+        setErrors({ form: error.message || 'Failed to load item details.' });
+      } finally {
+        setIsLoadingItem(false);
+      }
+    };
+
+    fetchItem();
+  }, [id, navigate]);
 
   const handleAddClue = () => {
     setPrivateClues(prev => [...prev, '']);
@@ -59,46 +94,67 @@ export const ReportFound = () => {
     return Object.keys(errs).length === 0;
   };
 
-  // Submit the found item details and private clues to the backend
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (!validate()) return;
+  // Create a new found item or update an existing one
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      setIsSubmitting(true);
+    if (!validate()) return;
 
-      try {
-          const filteredClues = privateClues
-              .map((clue) => clue.trim())
-              .filter(Boolean);
+    setIsSubmitting(true);
 
-          const response = await createItemApi({
-              type: 'found',
-              title: title.trim(),
-              category,
-              description: description.trim(),
-              locationName: locationName.trim(),
-              locationDetails: locationDetails.trim(),
-              eventDate,
-              imageUrls: images.filter((image) => image.startsWith('http')),
-              privateClues: filteredClues
-          });
+    try {
+      const filteredClues = privateClues
+        .map((clue) => clue.trim())
+        .filter(Boolean);
 
-          const newItem = response.item;
+      const itemData = {
+        title: title.trim(),
+        category,
+        description: description.trim(),
+        locationName: locationName.trim(),
+        locationDetails: locationDetails.trim(),
+        eventDate,
+        privateClues: filteredClues
+      };
 
-          setSuccessMessage('Your found item post is now live!');
+      let response;
 
-          setTimeout(() => {
-              navigate(`/items/${newItem._id}`);
-          }, 1200);
+      if (id) {
+        response = await updateItemApi(id, itemData);
+        setSuccessMessage('Your found item has been updated successfully!');
+      } else {
+        response = await createItemApi({
+          type: 'found',
+          ...itemData,
+          imageUrls: images.filter((image) => image.startsWith('http'))
+        });
 
-      } catch (err) {
-          setErrors({ form: err.message || 'Failed to submit post.' });
-          setIsSubmitting(false);
+        setSuccessMessage('Your found item post is now live!');
       }
+
+      const savedItem = response.item;
+
+      setTimeout(() => {
+        navigate(`/items/${savedItem._id}`);
+      }, 1200);
+
+    } catch (err) {
+      setErrors({ form: err.message || 'Failed to save found item.' });
+      setIsSubmitting(false);
+    }
   };
 
+  // Show a loading message while existing item details are being fetched
+  if (isLoadingItem) {
+    return (
+      <div className="report-item-page section-py">
+        Loading item details...
+      </div>
+    );
+  }
+
   return (
-    <div className="report-item-page section-py">
+  <div className="report-item-page section-py">
       <div className="content-container">
         <div className="report-card card">
           <div className="report-header found-theme">
@@ -271,7 +327,7 @@ export const ReportFound = () => {
                 size="lg" 
                 isLoading={isSubmitting}
               >
-                Publish Found Item
+                {id ? 'Save Changes' : 'Publish Found Item'}
               </Button>
             </div>
           </form>

@@ -92,8 +92,26 @@ export const App = () => {
             </ProtectedRoute>
           } 
         />
+        {/* Edit an existing lost item */}
+        <Route 
+          path="/report/lost/edit/:id" 
+          element={
+            <ProtectedRoute>
+              <ReportLost />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/report/found" 
+          element={
+            <ProtectedRoute>
+              <ReportFound />
+            </ProtectedRoute>
+          } 
+        />
+        {/* Edit an existing found item */}
+        <Route 
+          path="/report/found/edit/:id" 
           element={
             <ProtectedRoute>
               <ReportFound />

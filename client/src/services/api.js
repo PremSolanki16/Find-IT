@@ -65,3 +65,47 @@ export const getItemByIdApi = (itemId) => {
         method: "GET"
     });
 };
+
+// Get item details for editing, including private clues
+export const getItemForEditApi = (itemId) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/items/${itemId}/edit`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+
+// Get all items from the backend
+export const getAllItemsApi = () => {
+    return apiRequest("/items", {
+        method: "GET"
+    });
+};
+
+// Remove an item from the backend
+export const deleteItemApi = (itemId) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/items/${itemId}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+// Update an existing item in the backend
+export const updateItemApi = (itemId, itemData) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/items/${itemId}`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(itemData)
+    });
+};

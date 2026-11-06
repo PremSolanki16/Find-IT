@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAllItemsApi, deleteItemApi } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData';
@@ -13,20 +14,57 @@ import './DashboardPages.css';
 
 export const MyFoundItems = () => {
   const { currentUser } = useAuth();
-  const { items, claims, deleteItem } = useData();
+  const { claims } = useData();
   const navigate = useNavigate();
 
+  // Store items fetched from the backend
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  // Fetch all items from the backend when the page loads
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await getAllItemsApi();
+        setItems(response.items || []);
+      } catch (error) {
+        setFetchError(error.message || 'Failed to load items.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const myFoundItems = items.filter(i => i.createdBy === currentUser?._id && i.type === 'found');
+    fetchItems();
+  }, []);
 
-  const handleDeleteConfirm = () => {
-    if (deleteTargetId) {
-      deleteItem(deleteTargetId);
+  // Filter items created by the logged-in user
+  const myFoundItems = items.filter(
+    (item) =>
+      item.createdBy?._id === currentUser?._id &&
+      item.type === 'found'
+  );
+
+  // Remove the selected item using the backend DELETE API
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetId) return;
+
+    try {
+      await deleteItemApi(deleteTargetId);
+
+      // Remove the successfully deleted item from the displayed list
+      setItems((currentItems) =>
+        currentItems.filter((item) => item._id !== deleteTargetId)
+      );
+
+      setShowDeleteDialog(false);
+      setDeleteTargetId(null);
+      setDeleteError('');
+    } catch (error) {
+      setDeleteError(error.message || 'Failed to remove item.');
     }
-    setShowDeleteDialog(false);
-    setDeleteTargetId(null);
   };
 
   const columns = [
@@ -84,12 +122,18 @@ export const MyFoundItems = () => {
               View
             </Button>
           </Link>
+          <Link to={`/report/found/edit/${row._id}`}>
+            <Button variant="ghost" size="sm">
+              Edit
+            </Button>
+          </Link>
           <Button
             variant="ghost"
             size="sm"
             className="text-danger"
             icon={<TrashIcon size={14} />}
             onClick={() => {
+              setDeleteError('');
               setDeleteTargetId(row._id);
               setShowDeleteDialog(true);
             }}
@@ -116,8 +160,12 @@ export const MyFoundItems = () => {
           </Button>
         </Link>
       </div>
-
-      {myFoundItems.length === 0 ? (
+      {deleteError && <p>{deleteError}</p>}
+      {isLoading ? (
+        <p>Loading your found items...</p>
+      ) : fetchError ? (
+        <p>{fetchError}</p>
+      ) : myFoundItems.length === 0 ? (
         <EmptyState
           icon="📦"
           title="No Found Items Logged"

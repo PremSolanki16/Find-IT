@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+import { getAllItemsApi, deleteItemApi } from '../../services/api';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
 import ConfirmationDialog from '../../components/common/ConfirmationDialog';
@@ -13,20 +13,59 @@ import './DashboardPages.css';
 
 export const MyLostItems = () => {
   const { currentUser } = useAuth();
-  const { items, deleteItem, updateItem } = useData();
+
+  // Store items fetched from the backend
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');  
   const navigate = useNavigate();
 
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
-  const myLostItems = items.filter(i => i.createdBy === currentUser?._id && i.type === 'lost');
+  // Fetch all items from the backend when the page loads
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await getAllItemsApi();
+        setItems(response.items || []);
+      } catch (error) {
+        setFetchError(error.message || 'Failed to load items.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleDeleteConfirm = () => {
-    if (deleteTargetId) {
-      deleteItem(deleteTargetId);
+    fetchItems();
+  }, []);
+
+
+  // Filter items created by the logged-in user
+  const myLostItems = items.filter(
+    (item) =>
+      item.createdBy?._id === currentUser?._id &&
+      item.type === 'lost'
+  );
+
+  // Remove the selected item using the backend DELETE API
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetId) return;
+
+    try {
+      await deleteItemApi(deleteTargetId);
+
+      // Remove the successfully deleted item from the displayed list
+      setItems((currentItems) =>
+        currentItems.filter((item) => item._id !== deleteTargetId)
+      );
+
+      setShowDeleteDialog(false);
+      setDeleteTargetId(null);
+      setDeleteError('');
+    } catch (error) {
+      setDeleteError(error.message || 'Failed to remove item.');
     }
-    setShowDeleteDialog(false);
-    setDeleteTargetId(null);
   };
 
   const columns = [
@@ -77,12 +116,18 @@ export const MyLostItems = () => {
               View
             </Button>
           </Link>
+          <Link to={`/report/lost/edit/${row._id}`}>
+            <Button variant="ghost" size="sm">
+              Edit
+            </Button>
+          </Link>
           <Button
             variant="ghost"
             size="sm"
             className="text-danger"
             icon={<TrashIcon size={14} />}
             onClick={() => {
+              setDeleteError('');
               setDeleteTargetId(row._id);
               setShowDeleteDialog(true);
             }}
@@ -110,21 +155,26 @@ export const MyLostItems = () => {
         </Link>
       </div>
 
-      {myLostItems.length === 0 ? (
-        <EmptyState
-          icon="🎒"
-          title="No Lost Items Reported"
-          message="You currently have no active lost item reports on FindIt."
-          actionText="Report a Lost Item"
-          onAction={() => navigate('/report/lost')}
-        />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={myLostItems}
-          searchPlaceholder="Search my lost items..."
-        />
-      )}
+      {deleteError && <p>{deleteError}</p>}
+      {isLoading ? (
+        <p>Loading your lost items...</p>
+          ) : fetchError ? (
+            <p>{fetchError}</p>
+          ) : myLostItems.length === 0 ? (
+            <EmptyState
+              icon="🎒"
+              title="No Lost Items Reported"
+              message="You currently have no active lost item reports on FindIt."
+              actionText="Report a Lost Item"
+              onAction={() => navigate('/report/lost')}
+            />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={myLostItems}
+              searchPlaceholder="Search my lost items..."
+            />
+          )}
 
       <ConfirmationDialog
         isOpen={showDeleteDialog}
