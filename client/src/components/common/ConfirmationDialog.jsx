@@ -13,7 +13,8 @@ export const ConfirmationDialog = ({
   confirmVariant = 'danger',
   isLoading = false,
   onConfirm,
-  onCancel
+  onCancel,
+  children
 }) => {
   return (
     <Modal
@@ -38,6 +39,12 @@ export const ConfirmationDialog = ({
         </div>
         <p className="confirm-message">{message}</p>
       </div>
+
+      {children && (
+        <div style={{ width: '100%', marginTop: '16px' }}>
+          {children}
+        </div>
+      )}
     </Modal>
   );
 };

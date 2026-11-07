@@ -248,6 +248,7 @@ export const ClaimCard = ({
         )}
       </div>
 
+
       {/* Reject Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={showRejectDialog}
@@ -257,7 +258,30 @@ export const ClaimCard = ({
         confirmVariant="danger"
         onConfirm={handleConfirmReject}
         onCancel={() => setShowRejectDialog(false)}
-      />
+      >
+        <div style={{ marginTop: '16px' }}>
+          <label htmlFor="rejectReason">
+            Review Note (Optional)
+          </label>
+
+          <textarea
+            id="rejectReason"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Explain why this claim is being rejected..."
+            rows={3}
+            style={{
+              width: '100%',
+              minHeight: '90px',
+              resize: 'vertical',
+              boxSizing: 'border-box',
+              marginTop: '8px',
+              padding: '10px',
+              fontSize: '14px'
+            }}
+          />
+        </div>
+      </ConfirmationDialog>
 
       {/* Cancel Confirmation Dialog */}
       <ConfirmationDialog

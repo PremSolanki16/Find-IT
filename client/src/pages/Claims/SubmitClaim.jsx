@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
+import { getItemByIdApi, submitClaimApi } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import VerificationForm from '../../components/claims/VerificationForm';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -11,13 +11,55 @@ import './SubmitClaim.css';
 export const SubmitClaim = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { items, submitClaim } = useData();
-  const { currentUser, availableUsers } = useAuth();
-
+  const [item, setItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const item = items.find(i => i._id === id);
+  // Fetch the found item from the backend
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+
+        const response = await getItemByIdApi(id);
+        setItem(response.item);
+      } catch (err) {
+        setError(err.message || 'Failed to load item.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchItem();
+  }, [id]);
+
+    if (isLoading) {
+    return (
+      <div className="container section-py">
+        <div className="card item-not-found-card">
+          <p>Loading item details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container section-py">
+        <div className="card item-not-found-card">
+          <h2>Unable to Load Item</h2>
+          <p>{error}</p>
+          <Link to="/browse?type=found" className="text-primary">
+            ← Browse other found belongings
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
 
   if (!item) {
     return (
@@ -33,17 +75,19 @@ export const SubmitClaim = () => {
     );
   }
 
-  const finder = availableUsers.find(u => u._id === item.createdBy) || {
+    const finder = item.createdBy || {
     name: 'Campus Finder',
     avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'
   };
 
+  // Submit the claim to the backend
   const handleClaimSubmit = async (claimPayload) => {
     setIsSubmitting(true);
+
     try {
-      await new Promise(r => setTimeout(r, 450));
-      submitClaim(claimPayload);
+      await submitClaimApi(claimPayload);
       setSuccess(true);
+
       setTimeout(() => {
         navigate('/dashboard/claims');
       }, 1500);

@@ -109,3 +109,58 @@ export const updateItemApi = (itemId, itemData) => {
         body: JSON.stringify(itemData)
     });
 };
+
+
+// Submit a new claim to the backend
+export const submitClaimApi = (claimData) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/claims", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(claimData)
+    });
+};
+
+
+// Get claims submitted by the logged-in user
+export const getMyClaimsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/claims/my", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+
+
+// Update the status of an existing claim
+export const updateClaimStatusApi = (claimId, status, reviewNote = "") => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/claims/${claimId}/status`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status, reviewNote })
+    });
+};
+
+
+// Get claims received for items posted by the logged-in user
+export const getReceivedClaimsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/claims/received", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};

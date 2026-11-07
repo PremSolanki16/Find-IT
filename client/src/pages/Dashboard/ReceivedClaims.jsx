@@ -1,17 +1,48 @@
-import React from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+import React, { useEffect, useState } from 'react';
+import { getReceivedClaimsApi, updateClaimStatusApi } from '../../services/api';
 import ClaimCard from '../../components/claims/ClaimCard';
 import EmptyState from '../../components/common/EmptyState';
 import './DashboardPages.css';
 
 export const ReceivedClaims = () => {
-  const { currentUser, availableUsers } = useAuth();
-  const { items, claims, updateClaimStatus } = useData();
+const [receivedClaims, setReceivedClaims] = useState([]);
+const [isLoading, setIsLoading] = useState(true);
+const [error, setError] = useState('');
 
-  const myUserId = currentUser?._id;
-  const myFoundItemIds = items.filter(i => i.createdBy === myUserId).map(i => i._id);
-  const receivedClaims = claims.filter(c => myFoundItemIds.includes(c.itemId));
+  // Fetch claims received by the logged-in finder
+  useEffect(() => {
+    const fetchReceivedClaims = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+
+        const response = await getReceivedClaimsApi();
+        setReceivedClaims(response.claims || []);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch received claims.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReceivedClaims();
+  }, []);
+
+  // Update a claim status through the backend
+  const handleClaimStatusUpdate = async (id, status, note = '') => {
+    try {
+      const response = await updateClaimStatusApi(id, status, note);
+
+      setReceivedClaims((previousClaims) =>
+        previousClaims.map((claim) =>
+          claim._id === id ? response.claim : claim
+        )
+      );
+    } catch (err) {
+      alert(err.message || 'Failed to update claim status.');
+    }
+  };
+
 
   return (
     <div className="dash-subpage">
@@ -24,7 +55,11 @@ export const ReceivedClaims = () => {
         </div>
       </div>
 
-      {receivedClaims.length === 0 ? (
+      {isLoading ? (
+        <p>Loading received claims...</p>
+      ) : error ? (
+        <p>{error}</p>
+      ) : receivedClaims.length === 0 ? (
         <EmptyState
           icon="📥"
           title="No Received Claims Yet"
@@ -33,8 +68,8 @@ export const ReceivedClaims = () => {
       ) : (
         <div className="dash-cards-list">
           {receivedClaims.map((claim) => {
-            const item = items.find(i => i._id === claim.itemId);
-            const claimant = availableUsers.find(u => u._id === claim.claimantId);
+            const item = claim.itemId;
+            const claimant = claim.claimantId;
             return (
               <ClaimCard
                 key={claim._id}
@@ -42,9 +77,9 @@ export const ReceivedClaims = () => {
                 item={item}
                 claimant={claimant}
                 isFinderView={true}
-                onAccept={(id) => updateClaimStatus(id, 'accepted')}
-                onReject={(id, note) => updateClaimStatus(id, 'rejected', note)}
-                onComplete={(id) => updateClaimStatus(id, 'completed')}
+                onAccept={(id) => handleClaimStatusUpdate(id, 'accepted')}
+                onReject={(id, note) => handleClaimStatusUpdate(id, 'rejected', note)}
+                onComplete={(id) => handleClaimStatusUpdate(id, 'completed')}
               />
             );
           })}

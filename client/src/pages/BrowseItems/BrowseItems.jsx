@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
+import { getAllItemsApi } from '../../services/api';
 import ItemGrid from '../../components/items/ItemGrid';
 import SearchBar from '../../components/items/SearchBar';
 import FilterSidebar from '../../components/items/FilterSidebar';
@@ -10,8 +10,30 @@ import { FilterIcon } from '../../components/common/Icons';
 import './BrowseItems.css';
 
 export const BrowseItems = () => {
-  const { items } = useData();
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Fetch all available items from the backend when the page loads
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+
+        const response = await getAllItemsApi();
+        setItems(response.items || []);
+      } catch (error) {
+        setError(error.message || 'Failed to load items.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -181,19 +203,27 @@ export const BrowseItems = () => {
               )}
             </div>
 
-            <ItemGrid
-              items={paginatedItems}
-              emptyTitle="No matching belongings found"
-              emptyMessage="We couldn't find any lost or found items matching your current filters. Try relaxing your location or search terms."
-              emptyActionText="Reset All Filters"
-              onEmptyAction={handleResetFilters}
-            />
+            {isLoading ? (
+              <p>Loading items...</p>
+            ) : error ? (
+              <p>{error}</p>
+            ) : (
+              <>
+                <ItemGrid
+                  items={paginatedItems}
+                  emptyTitle="No matching belongings found"
+                  emptyMessage="We couldn't find any lost or found items matching your current filters. Try relaxing your location or search terms."
+                  emptyActionText="Reset All Filters"
+                  onEmptyAction={handleResetFilters}
+                />
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

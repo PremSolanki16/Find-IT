@@ -1,17 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+import { getMyClaimsApi, updateClaimStatusApi } from '../../services/api';
 import ClaimCard from '../../components/claims/ClaimCard';
 import EmptyState from '../../components/common/EmptyState';
 import './DashboardPages.css';
 
 export const MyClaims = () => {
-  const { currentUser, availableUsers } = useAuth();
-  const { items, claims, updateClaimStatus } = useData();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  const myClaims = claims.filter(c => c.claimantId === currentUser?._id);
+  const [myClaims, setMyClaims] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch claims submitted by the logged-in user
+  useEffect(() => {
+    const fetchMyClaims = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+
+        const response = await getMyClaimsApi();
+        setMyClaims(response.claims || []);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch your claims.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMyClaims();
+  }, []);
 
   return (
     <div className="dash-subpage">
@@ -27,7 +47,11 @@ export const MyClaims = () => {
         </Link>
       </div>
 
-      {myClaims.length === 0 ? (
+      {isLoading ? (
+        <p>Loading your claims...</p>
+      ) : error ? (
+        <p>{error}</p>
+      ) : myClaims.length === 0 ? (        
         <EmptyState
           icon="📑"
           title="No Submitted Claims"
@@ -37,9 +61,9 @@ export const MyClaims = () => {
         />
       ) : (
         <div className="dash-cards-list">
-          {myClaims.map((claim) => {
-            const item = items.find(i => i._id === claim.itemId);
-            const finder = availableUsers.find(u => u._id === item?.createdBy);
+            {myClaims.map((claim) => {
+            const item = claim.itemId;
+            const finder = item?.createdBy;
             return (
               <ClaimCard
                 key={claim._id}
@@ -47,7 +71,20 @@ export const MyClaims = () => {
                 item={item}
                 finder={finder}
                 isFinderView={false}
-                onCancel={(id) => updateClaimStatus(id, 'cancelled')}
+                onCancel={async (id) => {
+                // Cancel the claim through the backend
+                try {
+                  const response = await updateClaimStatusApi(id, 'cancelled');
+
+                  setMyClaims((previousClaims) =>
+                    previousClaims.map((claim) =>
+                      claim._id === id ? response.claim : claim
+                    )
+                  );
+                } catch (err) {
+                  alert(err.message || 'Failed to cancel claim.');
+                }
+              }}
               />
             );
           })}

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAllItemsApi } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData';
@@ -12,14 +13,37 @@ import './DashboardPages.css';
 
 export const DashboardOverview = () => {
   const { currentUser, availableUsers } = useAuth();
-  const { items, claims, updateClaimStatus } = useData();
+  const { claims, updateClaimStatus } = useData();
   const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [itemsError, setItemsError] = useState('');
+
+
+  // Fetch all items from the backend when the dashboard loads
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setIsLoadingItems(true);
+        setItemsError('');
+
+        const response = await getAllItemsApi();
+        setItems(response.items || []);
+      } catch (error) {
+        setItemsError(error.message || 'Failed to load items.');
+      } finally {
+        setIsLoadingItems(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
 
   const myUserId = currentUser?._id;
 
-  // Filter items created by current user
-  const myLostItems = items.filter(i => i.createdBy === myUserId && i.type === 'lost');
-  const myFoundItems = items.filter(i => i.createdBy === myUserId && i.type === 'found');
+  // Filter backend items created by the current user
+  const myLostItems = items.filter(i => i.createdBy?._id === myUserId && i.type === 'lost');
+  const myFoundItems = items.filter(i => i.createdBy?._id === myUserId && i.type === 'found');
 
   // Filter claims
   const myClaims = claims.filter(c => c.claimantId === myUserId);
@@ -114,7 +138,7 @@ export const DashboardOverview = () => {
         ) : (
           <div className="dash-cards-list">
             {receivedClaims.slice(0, 2).map((claim) => {
-              const item = items.find(i => i._id === claim.itemId);
+              const item = items.find(i => i._id === (claim.itemId?._id || claim.itemId));
               const claimant = availableUsers.find(u => u._id === claim.claimantId);
               return (
                 <ClaimCard
@@ -145,7 +169,11 @@ export const DashboardOverview = () => {
           </Link>
         </div>
 
-        {[...myLostItems, ...myFoundItems].length === 0 ? (
+                {isLoadingItems ? (
+          <p>Loading your items...</p>
+        ) : itemsError ? (
+          <p>{itemsError}</p>
+        ) : [...myLostItems, ...myFoundItems].length === 0 ? (
           <EmptyState
             icon="📦"
             title="No Items Reported"
