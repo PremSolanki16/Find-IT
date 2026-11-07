@@ -136,6 +136,7 @@ export const FilterSidebar = ({
             <option value="open">Open (Unclaimed)</option>
             <option value="claim_pending">Claim Pending</option>
             <option value="returned">Returned to Owner</option>
+            <option value="closed">Closed</option>
           </select>
         </div>
 

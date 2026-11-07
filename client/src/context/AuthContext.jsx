@@ -123,21 +123,7 @@ const signup = async (userData) => {
     setCurrentUser(null);
   };
 
-  // Existing demo user switcher
-  const switchUser = (userId) => {
-    localStorage.removeItem('findit_token');
-
-    if (!userId) {
-      setCurrentUser(null);
-      return;
-    }
-
-    const user = availableUsers.find(u => u._id === userId);
-
-    if (user) {
-      setCurrentUser(user);
-    }
-  };
+  
 
   // Existing user status management
   const updateUserStatus = (userId, newStatus) => {
@@ -164,7 +150,6 @@ const signup = async (userData) => {
     login,
     signup,
     logout,
-    switchUser,
     updateUserStatus
   };
 

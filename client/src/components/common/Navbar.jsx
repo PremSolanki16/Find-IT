@@ -7,11 +7,11 @@ import Button from './Button';
 import './Navbar.css';
 
 export const Navbar = () => {
-  const { currentUser, isAuthenticated, isAdmin, logout, availableUsers, switchUser } = useAuth();
+  const { currentUser, isAuthenticated, isAdmin, logout } = useAuth();
   const { notifications } = useData();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [demoSwitchOpen, setDemoSwitchOpen] = useState(false);
+  
   const navigate = useNavigate();
 
   // Calculate unread notifications for current user
@@ -32,29 +32,7 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* Top Demo Bar for Reviewers to switch between Guest, Normal Users, and Admin */}
-      <div className="demo-role-banner">
-        <div className="container demo-banner-content">
-          <span className="demo-badge">Interactive Demo Mode</span>
-          <div className="demo-role-selector">
-            <span className="demo-label">Active Role:</span>
-            <select
-              className="demo-select"
-              value={currentUser ? currentUser._id : 'guest'}
-              onChange={(e) => {
-                const val = e.target.value;
-                switchUser(val === 'guest' ? null : val);
-              }}
-            >
-              <option value="usr_001">Prem Solanki (Standard User)</option>
-              <option value="usr_002">Priya Sharma (Finder / User)</option>
-              <option value="usr_admin">Sarah Jenkins (Platform Admin)</option>
-              <option value="guest">Guest (Logged Out)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
+      
       <header className="navbar-header">
         <div className="container navbar-container">
           {/* Logo */}

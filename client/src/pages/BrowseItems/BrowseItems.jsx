@@ -113,8 +113,9 @@ export const BrowseItems = () => {
 
       // Date Range
       if (filters.startDate && new Date(item.eventDate) < new Date(filters.startDate)) return false;
-      if (filters.endDate && new Date(item.eventDate) > new Date(filters.endDate)) return false;
-
+      // Include the entire selected end date
+      if (filters.endDate && new Date(item.eventDate) >= new Date(new Date(filters.endDate).getTime() + 24 * 60 * 60 * 1000)) return false;
+      
       // Keyword Search
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();

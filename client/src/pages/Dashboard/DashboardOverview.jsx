@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getAllItemsApi } from '../../services/api';
+import {
+  getAllItemsApi,
+  getMyClaimsApi,
+  getReceivedClaimsApi,
+  updateClaimStatusApi
+} from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+
 import StatCard from '../../components/dashboard/StatCard';
 import ItemCard from '../../components/items/ItemCard';
 import ClaimCard from '../../components/claims/ClaimCard';
@@ -12,13 +17,16 @@ import { PlusIcon, ArrowRightIcon } from '../../components/common/Icons';
 import './DashboardPages.css';
 
 export const DashboardOverview = () => {
-  const { currentUser, availableUsers } = useAuth();
-  const { claims, updateClaimStatus } = useData();
+  const { currentUser } = useAuth();
+  
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [itemsError, setItemsError] = useState('');
 
+const [myClaims, setMyClaims] = useState([]);
+const [receivedClaims, setReceivedClaims] = useState([]);
+const [isLoadingClaims, setIsLoadingClaims] = useState(true);
 
   // Fetch all items from the backend when the dashboard loads
   useEffect(() => {
@@ -39,20 +47,56 @@ export const DashboardOverview = () => {
     fetchItems();
   }, []);
 
+  // Fetch submitted and received claims from the backend
+  useEffect(() => {
+    const fetchClaims = async () => {
+      try {
+        setIsLoadingClaims(true);
+
+        const [myClaimsResponse, receivedClaimsResponse] = await Promise.all([
+          getMyClaimsApi(),
+          getReceivedClaimsApi()
+        ]);
+
+        setMyClaims(myClaimsResponse.claims || []);
+        setReceivedClaims(receivedClaimsResponse.claims || []);
+      } catch (error) {
+        console.error('Failed to load dashboard claims:', error);
+      } finally {
+        setIsLoadingClaims(false);
+      }
+    };
+
+    fetchClaims();
+  }, []);
+
+  // Update claim status through the backend
+const handleClaimStatusUpdate = async (id, status, note = '') => {
+  try {
+    const response = await updateClaimStatusApi(id, status, note);
+
+    setReceivedClaims((previousClaims) =>
+      previousClaims.map((claim) =>
+        claim._id === id ? response.claim : claim
+      )
+    );
+  } catch (error) {
+    alert(error.message || 'Failed to update claim status.');
+  }
+};
   const myUserId = currentUser?._id;
 
   // Filter backend items created by the current user
   const myLostItems = items.filter(i => i.createdBy?._id === myUserId && i.type === 'lost');
   const myFoundItems = items.filter(i => i.createdBy?._id === myUserId && i.type === 'found');
 
-  // Filter claims
-  const myClaims = claims.filter(c => c.claimantId === myUserId);
-  const myFoundItemIds = myFoundItems.map(i => i._id);
-  const receivedClaims = claims.filter(c => myFoundItemIds.includes(c.itemId));
+  // Calculate dashboard statistics using backend claims
+  const pendingReceivedCount = receivedClaims.filter(
+    (claim) => claim.status === 'pending'
+  ).length;
 
-  const pendingReceivedCount = receivedClaims.filter(c => c.status === 'pending').length;
-  const completedReturnsCount = claims.filter(c => 
-    (c.claimantId === myUserId || myFoundItemIds.includes(c.itemId)) && c.status === 'completed'
+  const completedReturnsCount = [...myClaims, ...receivedClaims].filter(
+    (claim) => claim.status === 'completed'
   ).length;
 
   return (
@@ -129,7 +173,9 @@ export const DashboardOverview = () => {
           </Link>
         </div>
 
-        {receivedClaims.length === 0 ? (
+        {isLoadingClaims ? (
+          <p>Loading claims...</p>
+        ) : receivedClaims.length === 0 ? (
           <EmptyState
             icon="📥"
             title="No Claims Received Yet"
@@ -139,7 +185,7 @@ export const DashboardOverview = () => {
           <div className="dash-cards-list">
             {receivedClaims.slice(0, 2).map((claim) => {
               const item = items.find(i => i._id === (claim.itemId?._id || claim.itemId));
-              const claimant = availableUsers.find(u => u._id === claim.claimantId);
+              const claimant = claim.claimantId;
               return (
                 <ClaimCard
                   key={claim._id}
@@ -147,9 +193,9 @@ export const DashboardOverview = () => {
                   item={item}
                   claimant={claimant}
                   isFinderView={true}
-                  onAccept={(id) => updateClaimStatus(id, 'accepted')}
-                  onReject={(id, note) => updateClaimStatus(id, 'rejected', note)}
-                  onComplete={(id) => updateClaimStatus(id, 'completed')}
+                  onAccept={(id) => handleClaimStatusUpdate(id, 'accepted')}
+                  onReject={(id, note) => handleClaimStatusUpdate(id, 'rejected', note)}
+                  onComplete={(id) => handleClaimStatusUpdate(id, 'completed')}
                 />
               );
             })}

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getReceivedClaimsApi } from '../../services/api';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData';
@@ -13,8 +14,25 @@ import './DashboardSidebar.css';
 
 export const DashboardSidebar = ({ isAdminView = false }) => {
   const { currentUser, logout } = useAuth();
-  const { notifications, claims } = useData();
+  const { notifications } = useData();
   const navigate = useNavigate();
+
+  // Store received claims fetched from the backend
+  const [claims, setClaims] = useState([]);
+
+  // Fetch received claims from the backend for the sidebar count
+  useEffect(() => {
+    const fetchClaims = async () => {
+      try {
+        const response = await getReceivedClaimsApi();
+        setClaims(response.claims || []);
+      } catch (error) {
+        console.error('Failed to load sidebar claims:', error);
+      }
+    };
+
+    fetchClaims();
+  }, []);
 
   // Counts
   const unreadNotifs = notifications.filter(n => n.recipientId === currentUser?._id && !n.isRead).length;

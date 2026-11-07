@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getAllItemsApi, deleteItemApi } from '../../services/api';
+import {
+  getAllItemsApi,
+  deleteItemApi,
+  getReceivedClaimsApi
+} from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
 import ConfirmationDialog from '../../components/common/ConfirmationDialog';
@@ -14,11 +17,13 @@ import './DashboardPages.css';
 
 export const MyFoundItems = () => {
   const { currentUser } = useAuth();
-  const { claims } = useData();
+
   const navigate = useNavigate();
 
   // Store items fetched from the backend
   const [items, setItems] = useState([]);
+  // Store received claims fetched from the backend
+  const [claims, setClaims] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -39,6 +44,21 @@ export const MyFoundItems = () => {
 
     fetchItems();
   }, []);
+
+  // Fetch claims received for the logged-in user's items
+  useEffect(() => {
+    const fetchClaims = async () => {
+      try {
+        const response = await getReceivedClaimsApi();
+        setClaims(response.claims || []);
+      } catch (error) {
+        console.error('Failed to load received claims:', error);
+      }
+    };
+
+    fetchClaims();
+  }, []);
+
 
   // Filter items created by the logged-in user
   const myFoundItems = items.filter(
@@ -104,8 +124,14 @@ export const MyFoundItems = () => {
     {
       header: 'Claims',
       render: (row) => {
-        const itemClaims = claims.filter(c => c.itemId === row._id);
-        const pending = itemClaims.filter(c => c.status === 'pending').length;
+      // Find claims belonging to the current found item
+      const itemClaims = claims.filter(
+        (claim) => (claim.itemId?._id || claim.itemId) === row._id
+      );
+
+      const pending = itemClaims.filter(
+        (claim) => claim.status === 'pending'
+      ).length;
         return (
           <Link to="/dashboard/received-claims" className="item-claims-pill">
             {itemClaims.length} claim(s) {pending > 0 && <span className="pending-indicator">({pending} new)</span>}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
+
+import { getAllItemsApi } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import ItemGrid from '../../components/items/ItemGrid';
 import SearchBar from '../../components/items/SearchBar';
@@ -17,10 +18,24 @@ import { CATEGORY_LABELS } from '../../utils/formatters';
 import './Home.css';
 
 export const Home = () => {
-  const { items, claims } = useData();
+  const [items, setItems] = useState([]);
   const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
+  // Fetch items from the backend when the home page loads
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await getAllItemsApi();
+        setItems(response.items || []);
+      } catch (error) {
+        console.error('Failed to load home page items:', error);
+      }
+    };
+
+    fetchItems();
+  }, []);
 
   // Search submit
   const handleSearch = (query) => {
@@ -39,7 +54,8 @@ export const Home = () => {
   // Platform Statistics
   const totalLost = items.filter(i => i.type === 'lost').length;
   const totalFound = items.filter(i => i.type === 'found').length;
-  const totalCompleted = claims.filter(c => c.status === 'completed').length + 12; // mock baseline
+  // Count items successfully returned using backend item data
+  const totalCompleted = items.filter(item => item.status === 'returned').length;
 
   return (
     <div className="home-page-root">
@@ -109,8 +125,8 @@ export const Home = () => {
             </div>
             <div className="stat-strip-divider" />
             <div className="stat-strip-item">
-              <span className="stat-strip-num">98.4%</span>
-              <span className="stat-strip-label">Community Safety Rating</span>
+              <span className="stat-strip-num">Private</span>
+              <span className="stat-strip-label">Ownership Verification</span>
             </div>
           </div>
         </div>
