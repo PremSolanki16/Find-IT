@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createItemApi, getItemForEditApi, updateItemApi } from '../../services/api';
+import { createItemApi, getItemForEditApi, updateItemApi, uploadImagesApi } from '../../services/api';
 import Input from '../../components/common/Input';
 import FormField from '../../components/common/FormField';
 import Button from '../../components/common/Button';
@@ -94,7 +94,7 @@ export const ReportFound = () => {
     return Object.keys(errs).length === 0;
   };
 
-  // Create a new found item or update an existing one
+  // Upload new images and create or update the found item report
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -107,6 +107,24 @@ export const ReportFound = () => {
         .map((clue) => clue.trim())
         .filter(Boolean);
 
+      // Keep existing image URLs and identify newly selected files
+      const existingImageUrls = images.filter(
+        (image) => typeof image === 'string'
+      );
+
+      const newImageFiles = images
+        .filter((image) => image.file)
+        .map((image) => image.file);
+
+      // Upload new images to Cloudinary when files are selected
+      let uploadedImageUrls = [];
+
+      if (newImageFiles.length > 0) {
+        const uploadResponse = await uploadImagesApi(newImageFiles);
+        uploadedImageUrls = uploadResponse.imageUrls;
+      }
+
+      // Prepare report details with all image URLs
       const itemData = {
         title: title.trim(),
         category,
@@ -114,6 +132,7 @@ export const ReportFound = () => {
         locationName: locationName.trim(),
         locationDetails: locationDetails.trim(),
         eventDate,
+        imageUrls: [...existingImageUrls, ...uploadedImageUrls],
         privateClues: filteredClues
       };
 
@@ -125,8 +144,7 @@ export const ReportFound = () => {
       } else {
         response = await createItemApi({
           type: 'found',
-          ...itemData,
-          imageUrls: images.filter((image) => image.startsWith('http'))
+          ...itemData
         });
 
         setSuccessMessage('Your found item post is now live!');
@@ -139,7 +157,9 @@ export const ReportFound = () => {
       }, 1200);
 
     } catch (err) {
-      setErrors({ form: err.message || 'Failed to save found item.' });
+      setErrors({
+        form: err.message || 'Failed to save found item.'
+      });
       setIsSubmitting(false);
     }
   };

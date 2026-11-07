@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { UploadIcon, XIcon } from '../common/Icons';
 import './ImageUpload.css';
@@ -11,35 +12,41 @@ export const ImageUpload = ({
 }) => {
   const fileInputRef = useRef(null);
 
-  const samplePresets = [
-    { label: 'Backpack', url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Headphones', url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Wallet', url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Laptop', url: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80' },
-    { label: 'Keys', url: 'https://images.unsplash.com/photo-1589824783837-6169889fa20f?auto=format&fit=crop&w=800&q=80' }
-  ];
-
-  const handleFileChange = (e) => {
+  // Read selected files and create previews while retaining the actual files
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    files.slice(0, maxImages - images.length).forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onChange([...images, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const availableSlots = maxImages - images.length;
+    const selectedFiles = files.slice(0, availableSlots);
+
+    const newImages = await Promise.all(
+      selectedFiles.map((file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onloadend = () => {
+            resolve({
+              file,
+              preview: reader.result
+            });
+          };
+
+          reader.onerror = () => reject(new Error('Failed to read image.'));
+          reader.readAsDataURL(file);
+        });
+      })
+    );
+
+    onChange([...images, ...newImages]);
+
+    // Allow selecting the same file again
+    e.target.value = '';
   };
 
+  // Remove the selected image from the form
   const handleRemove = (indexToRemove) => {
     onChange(images.filter((_, idx) => idx !== indexToRemove));
-  };
-
-  const handleSelectPreset = (url) => {
-    if (images.length < maxImages && !images.includes(url)) {
-      onChange([...images, url]);
-    }
   };
 
   return (
@@ -53,13 +60,15 @@ export const ImageUpload = ({
 
       {/* Dropzone */}
       {images.length < maxImages && (
-        <div 
+        <div
           className="image-dropzone"
           onClick={() => fileInputRef.current?.click()}
         >
           <UploadIcon size={28} color="var(--color-primary)" />
           <div className="dropzone-text">
-            <span className="dropzone-prompt">Click to browse or drag file here</span>
+            <span className="dropzone-prompt">
+              Click to browse or drag file here
+            </span>
             <span className="dropzone-sub">{hint}</span>
           </div>
           <input
@@ -67,35 +76,22 @@ export const ImageUpload = ({
             ref={fileInputRef}
             onChange={handleFileChange}
             accept="image/*"
+            multiple
             style={{ display: 'none' }}
           />
         </div>
       )}
 
-      {/* Preset Pickers for Quick Demo */}
-      <div className="image-presets-row">
-        <span className="preset-label">Quick sample photos:</span>
-        <div className="preset-chips">
-          {samplePresets.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => handleSelectPreset(preset.url)}
-              disabled={images.length >= maxImages}
-            >
-              + {preset.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Previews Grid */}
+      {/* Image Previews */}
       {images.length > 0 && (
         <div className="image-previews-grid">
-          {images.map((imgUrl, index) => (
+          {images.map((image, index) => (
             <div key={index} className="image-preview-card">
-              <img src={imgUrl} alt={`Upload preview ${index + 1}`} className="preview-img" />
+              <img
+                src={typeof image === 'string' ? image : image.preview}
+                alt={`Upload preview ${index + 1}`}
+                className="preview-img"
+              />
               <button
                 type="button"
                 className="remove-preview-btn"
@@ -104,7 +100,9 @@ export const ImageUpload = ({
               >
                 <XIcon size={14} />
               </button>
-              {index === 0 && <span className="primary-photo-tag">Cover Photo</span>}
+              {index === 0 && (
+                <span className="primary-photo-tag">Cover Photo</span>
+              )}
             </div>
           ))}
         </div>
@@ -114,4 +112,3 @@ export const ImageUpload = ({
 };
 
 export default ImageUpload;
-

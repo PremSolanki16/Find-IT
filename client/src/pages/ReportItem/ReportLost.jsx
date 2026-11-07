@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createItemApi, getItemByIdApi, updateItemApi } from '../../services/api';
+import { createItemApi, getItemByIdApi, updateItemApi, uploadImagesApi } from '../../services/api';
 import Input from '../../components/common/Input';
 import FormField from '../../components/common/FormField';
 import Button from '../../components/common/Button';
@@ -78,30 +78,53 @@ export const ReportLost = () => {
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
-  // Create a new lost item or update the existing item in edit mode
   
+  // Upload new images and create or update the lost item report
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!validate()) return;
 
     setIsSubmitting(true);
 
-    const itemData = {
-      title: title.trim(),
-      category,
-      description: description.trim(),
-      locationName: locationName.trim(),
-      locationDetails: locationDetails.trim(),
-      eventDate,
-      imageUrls: images.filter((image) => image.startsWith('http')),
-      isRewardOffered,
-      rewardDetails: isRewardOffered ? rewardDetails.trim() : ''
-    };
-
     try {
+      // Keep existing image URLs and identify newly selected files
+      const existingImageUrls = images.filter(
+        (image) => typeof image === 'string'
+      );
+
+      const newImageFiles = images
+        .filter((image) => image.file)
+        .map((image) => image.file);
+
+      // Upload new images to Cloudinary when files are selected
+      let uploadedImageUrls = [];
+
+      if (newImageFiles.length > 0) {
+        const uploadResponse = await uploadImagesApi(newImageFiles);
+        uploadedImageUrls = uploadResponse.imageUrls;
+      }
+
+      // Combine existing and newly uploaded image URLs
+      const itemData = {
+        title: title.trim(),
+        category,
+        description: description.trim(),
+        locationName: locationName.trim(),
+        locationDetails: locationDetails.trim(),
+        eventDate,
+        imageUrls: [...existingImageUrls, ...uploadedImageUrls],
+        isRewardOffered,
+        rewardDetails: isRewardOffered ? rewardDetails.trim() : ''
+      };
+
       if (id) {
         await updateItemApi(id, itemData);
         setSuccessMessage('Your lost item report has been updated!');
+
+        setTimeout(() => {
+          navigate(`/items/${id}`);
+        }, 1200);
       } else {
         const response = await createItemApi({
           type: 'lost',
@@ -113,16 +136,11 @@ export const ReportLost = () => {
         setTimeout(() => {
           navigate(`/items/${response.item._id}`);
         }, 1200);
-
-        return;
       }
-
-      setTimeout(() => {
-        navigate(`/items/${id}`);
-      }, 1200);
-
     } catch (err) {
-      setErrors({ form: err.message || 'Failed to save item.' });
+      setErrors({
+        form: err.message || 'Failed to save item.'
+      });
       setIsSubmitting(false);
     }
   };

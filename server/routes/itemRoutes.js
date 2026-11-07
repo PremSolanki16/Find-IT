@@ -6,10 +6,14 @@ const {
     getItemById,
     getItemForEdit,
     updateItem,
-    deleteItem
+    deleteItem,
+    uploadItemImages
 } = require("../controllers/itemController");
-
+const upload = require("../middleware/uploadMiddleware");
 const authMiddleware = require("../middleware/authMiddleware");
+
+// Upload item images (protected)
+router.post("/upload-images", authMiddleware, upload.array("images", 3), uploadItemImages);
 
 // Create a new lost or found item (protected)
 router.post("/", authMiddleware, createItem);

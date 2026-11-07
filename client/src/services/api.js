@@ -164,3 +164,30 @@ export const getReceivedClaimsApi = () => {
         }
     });
 };
+
+
+// Upload item images to the backend
+export const uploadImagesApi = (images) => {
+    const token = localStorage.getItem("findit_token");
+    const formData = new FormData();
+
+    images.forEach((image) => {
+        formData.append("images", image);
+    });
+
+    return fetch(`${API_BASE_URL}/items/upload-images`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    }).then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Image upload failed");
+        }
+
+        return data;
+    });
+};

@@ -1,5 +1,54 @@
 
 const Item = require("../models/Item");
+const cloudinary = require("../config/cloudinary");
+
+// Upload received image files to Cloudinary and return their secure URLs
+const uploadItemImages = async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select at least one image"
+            });
+        }
+
+        const uploadedImages = await Promise.all(
+            req.files.map((file) => {
+                return new Promise((resolve, reject) => {
+                    const uploadStream = cloudinary.uploader.upload_stream(
+                        {
+                            folder: "findit/items",
+                            resource_type: "image"
+                        },
+                        (error, result) => {
+                            if (error) {
+                                reject(error);
+                            } else {
+                                resolve(result.secure_url);
+                            }
+                        }
+                    );
+
+                    uploadStream.end(file.buffer);
+                });
+            })
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Images uploaded successfully",
+            imageUrls: uploadedImages
+        });
+
+    } catch (error) {
+        console.error("Image Upload Failed:", error.message);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to upload images"
+        });
+    }
+};
 
 // Create a new lost or found item
 const createItem = async (req, res) => {
@@ -81,6 +130,7 @@ const createItem = async (req, res) => {
         });
     }
 };
+
 // Get all items
 const getAllItems = async (req, res) => {
     try {
@@ -350,5 +400,6 @@ module.exports = {
     getItemById,
     getItemForEdit,
     updateItem,
-    deleteItem
+    deleteItem,
+    uploadItemImages
 };
