@@ -14,13 +14,18 @@ export const ChatWindow = ({
   onSendMessage
 }) => {
   const [inputText, setInputText] = useState('');
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const otherId = conversation?.participantIds.find(id => id !== currentUserId) || conversation?.participantIds[0];
   const otherUser = users.find(u => u._id === otherId) || { name: 'Chat Member', avatarUrl: '' };
 
+  // Keep scrolling inside the messages area without moving the page
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   const handleSend = (e) => {
@@ -75,7 +80,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages Stream */}
-      <div className="chat-messages-stream">
+      <div className="chat-messages-stream" ref={messagesContainerRef}>
         {messages.map((msg) => {
           const isMine = msg.senderId === currentUserId;
           const sender = isMine ? null : otherUser;
@@ -88,7 +93,7 @@ export const ChatWindow = ({
             />
           );
         })}
-        <div ref={messagesEndRef} />
+        
       </div>
 
       {/* Input Row */}

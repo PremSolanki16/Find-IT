@@ -191,3 +191,28 @@ export const uploadImagesApi = (images) => {
         return data;
     });
 };
+
+
+// Get conversations for the logged-in user
+export const getConversationsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/conversations", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Get message history for a conversation
+export const getMessagesApi = (conversationId) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/conversations/${conversationId}/messages`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};

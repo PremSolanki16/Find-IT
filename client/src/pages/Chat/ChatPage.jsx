@@ -1,37 +1,190 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
 import ConversationList from '../../components/chat/ConversationList';
 import ChatWindow from '../../components/chat/ChatWindow';
+import {
+  getConversationsApi,
+  getMessagesApi
+} from '../../services/api';
+import { createChatSocket } from '../../services/chatSocket';
 import './ChatPage.css';
 
 export const ChatPage = () => {
   const { currentUser, availableUsers } = useAuth();
-  const { conversations, messages, items, sendMessage } = useData();
+
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [selectedConvId, setSelectedConvId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const socketRef = useRef(null);
 
   const currentUserId = currentUser?._id;
 
-  // Filter conversations where current user is a participant
-  const userConversations = conversations.filter(c => 
-    c.participantIds.includes(currentUserId)
+  // Load conversations from the backend
+  useEffect(() => {
+    const loadConversations = async () => {
+      try {
+        const response = await getConversationsApi();
+
+        setConversations(response.conversations);
+
+        if (response.conversations.length > 0) {
+          setSelectedConvId(response.conversations[0]._id);
+        }
+      } catch (error) {
+        console.error('Failed to load conversations:', error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConversations();
+  }, []);
+
+  // Connect to the authenticated Socket.IO server
+  useEffect(() => {
+    const token = localStorage.getItem('findit_token');
+
+    if (!token) return;
+
+    const socket = createChatSocket(token);
+
+    socketRef.current = socket;
+
+    socket.connect();
+
+    socket.on('connect_error', (error) => {
+      console.error('Chat connection failed:', error.message);
+    });
+
+    socket.on('message_error', (error) => {
+      console.error('Chat message error:', error.message);
+    });
+
+    socket.on('receive_message', (message) => {
+      setMessages((prev) => {
+        const alreadyExists = prev.some(
+          (msg) => msg._id === message._id
+        );
+
+        return alreadyExists ? prev : [...prev, message];
+      });
+
+      setConversations((prev) =>
+        prev.map((conversation) =>
+          conversation._id === message.conversationId
+            ? {
+                ...conversation,
+                lastMessageAt: message.createdAt
+              }
+            : conversation
+        )
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, []);
+
+  // Load message history and join the selected conversation
+  useEffect(() => {
+    if (!selectedConvId) {
+      setMessages([]);
+      return;
+    }
+
+    let isActive = true;
+
+    const loadMessages = async () => {
+      try {
+        const response = await getMessagesApi(selectedConvId);
+
+        if (isActive) {
+          setMessages(response.messages);
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error.message);
+      }
+    };
+
+    loadMessages();
+
+    const socket = socketRef.current;
+
+    // Join the conversation whenever the socket connects
+    const joinConversation = () => {
+      socket.emit('join_conversation', selectedConvId);
+    };
+
+    if (socket) {
+      socket.on('connect', joinConversation);
+
+      if (socket.connected) {
+        joinConversation();
+      }
+    }
+
+    return () => {
+    isActive = false;
+
+    if (socket) {
+        socket.off('connect', joinConversation);
+
+        // Leave the previous conversation when switching chats
+        socket.emit('leave_conversation', selectedConvId);
+    }
+};
+}, [selectedConvId]);
+
+  // Send a message through Socket.IO
+  const sendMessage = (conversationId, text) => {
+    if (!text.trim() || !socketRef.current?.connected) {
+      console.error('Chat server is not connected');
+      return;
+    }
+
+    socketRef.current.emit('send_message', {
+      conversationId,
+      text: text.trim()
+    });
+  };
+
+  // Convert populated participants into the existing UI structure
+  const userConversations = conversations.map((conversation) => ({
+    ...conversation,
+    participantIds: conversation.participantIds.map(
+      (participant) => participant._id
+    ),
+    itemId: conversation.itemId?._id
+  }));
+
+  // Get users from the existing user list and conversation participants
+  const chatUsers = [
+    ...availableUsers,
+    ...conversations.flatMap((conversation) => conversation.participantIds)
+  ].filter(
+    (user, index, users) =>
+      users.findIndex((entry) => entry._id === user._id) === index
   );
 
-  const [selectedConvId, setSelectedConvId] = useState(() => {
-    return userConversations.length > 0 ? userConversations[0]._id : null;
-  });
+  const activeConversation = conversations.find(
+    (conversation) => conversation._id === selectedConvId
+  );
 
-  // Current active conversation
-  const activeConversation = conversations.find(c => c._id === selectedConvId) || userConversations[0] || null;
+  const activeItem = activeConversation?.itemId || null;
 
-  // Messages for active conversation
-  const activeMessages = activeConversation
-    ? messages.filter(m => m.conversationId === activeConversation._id)
-    : [];
+  // Display only messages belonging to the selected conversation
+  const activeMessages = messages.filter(
+    (message) => message.conversationId === selectedConvId
+  );
 
-  // Related item
-  const activeItem = activeConversation
-    ? items.find(i => i._id === activeConversation.itemId)
-    : null;
+  if (isLoading) {
+    return <div className="chat-page-root">Loading conversations...</div>;
+  }
 
   return (
     <div className="chat-page-root">
@@ -39,17 +192,32 @@ export const ChatPage = () => {
         <ConversationList
           conversations={userConversations}
           currentUserId={currentUserId}
-          users={availableUsers}
-          items={items}
-          selectedConversationId={activeConversation?._id}
+          users={chatUsers}
+          items={conversations.map((conversation) => conversation.itemId)}
+          selectedConversationId={selectedConvId}
           onSelectConversation={setSelectedConvId}
         />
 
         <ChatWindow
-          conversation={activeConversation}
-          messages={activeMessages}
+          conversation={
+            activeConversation
+              ? {
+                  ...activeConversation,
+                  participantIds: activeConversation.participantIds.map(
+                    (participant) => participant._id
+                  )
+                }
+              : null
+          }
+          messages={activeMessages.map((message) => ({
+            ...message,
+            senderId:
+              typeof message.senderId === 'object'
+                ? message.senderId._id
+                : message.senderId
+          }))}
           currentUserId={currentUserId}
-          users={availableUsers}
+          users={chatUsers}
           item={activeItem}
           onSendMessage={sendMessage}
         />
@@ -59,4 +227,3 @@ export const ChatPage = () => {
 };
 
 export default ChatPage;
-

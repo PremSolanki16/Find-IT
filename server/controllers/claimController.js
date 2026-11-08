@@ -1,6 +1,6 @@
-
 const Claim = require("../models/Claim");
 const Item = require("../models/Item");
+const Conversation = require("../models/Conversation");
 
 // Create a new claim for a found item
 const createClaim = async (req, res) => {
@@ -255,6 +255,28 @@ const updateClaimStatus = async (req, res) => {
         }
 
         await claim.save();
+
+        // Create one conversation when a claim is accepted
+        if (status === "accepted") {
+            await Conversation.findOneAndUpdate(
+                { claimId: claim._id },
+                {
+                    $setOnInsert: {
+                        claimId: claim._id,
+                        itemId: claim.itemId._id,
+                        participantIds: [
+                            claim.itemId.createdBy,
+                            claim.claimantId
+                        ]
+                    }
+                },
+                {
+                    new: true,
+                    upsert: true,
+                    setDefaultsOnInsert: true
+                }
+            );
+        }
 
         if (status === "completed") {
             claim.itemId.status = "returned";
