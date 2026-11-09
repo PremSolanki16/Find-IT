@@ -1,18 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+import { useNotifications } from '../../context/NotificationContext';
 import { BellIcon, PlusIcon } from '../common/Icons';
 import Button from '../common/Button';
 import './DashboardNavbar.css';
 
 export const DashboardNavbar = ({ title, subtitle = null, onToggleSidebar = null }) => {
   const { currentUser } = useAuth();
-  const { notifications } = useData();
+  const { unreadCount } = useNotifications();
 
-  const unreadCount = currentUser 
-    ? notifications.filter(n => n.recipientId === currentUser._id && !n.isRead).length 
-    : 0;
+ 
 
   return (
     <header className="dashboard-navbar">

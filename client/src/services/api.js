@@ -216,3 +216,39 @@ export const getMessagesApi = (conversationId) => {
         }
     });
 };
+
+// Get notifications for the logged-in user
+export const getNotificationsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/notifications", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Mark one notification as read
+export const markNotificationAsReadApi = (notificationId) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/notifications/${notificationId}/read`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Mark all notifications as read
+export const markAllNotificationsAsReadApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/notifications/read-all", {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};

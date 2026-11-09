@@ -1,24 +1,72 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+import { useNotifications } from '../../context/NotificationContext';
 import { BellIcon, MenuIcon, XIcon, PlusIcon, UserIcon } from './Icons';
 import Button from './Button';
 import './Navbar.css';
 
 export const Navbar = () => {
   const { currentUser, isAuthenticated, isAdmin, logout } = useAuth();
-  const { notifications } = useData();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  
+  const {
+    notifications,
+    unreadCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead
+  } = useNotifications();
+
+const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+const notificationMenuRef = useRef(null);
+// Close notification dropdown when clicking outside or pressing Escape
+useEffect(() => {
+  const handleOutsideClick = (event) => {
+    if (
+      notificationMenuRef.current &&
+      !notificationMenuRef.current.contains(event.target)
+    ) {
+      setNotificationDropdownOpen(false);
+    }
+  };
+
+  const handleEscapeKey = (event) => {
+    if (event.key === 'Escape') {
+      setNotificationDropdownOpen(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleOutsideClick);
+  document.addEventListener('keydown', handleEscapeKey);
+
+  return () => {
+    document.removeEventListener('mousedown', handleOutsideClick);
+    document.removeEventListener('keydown', handleEscapeKey);
+  };
+}, []);
   const navigate = useNavigate();
+  // Get the destination page for each notification type
+  const getNotificationTarget = (notification) => {
+    switch (notification.type) {
+      case 'claim_received':
+        return '/dashboard/received-claims';
 
-  // Calculate unread notifications for current user
-  const unreadCount = currentUser 
-    ? notifications.filter(n => n.recipientId === currentUser._id && !n.isRead).length 
-    : 0;
+      case 'claim_accepted':
+      case 'claim_rejected':
+        return '/dashboard/claims';
 
+      case 'new_message':
+        return '/chat';
+
+      case 'item_update':
+        return notification.relatedItemId
+          ? `/items/${notification.relatedItemId}`
+          : '/notifications';
+
+      default:
+        return '/notifications';
+    }
+  };
   const handleLogout = () => {
     logout();
     setProfileDropdownOpen(false);
@@ -99,13 +147,87 @@ export const Navbar = () => {
                   </Button>
                 </Link>
 
-                {/* Notifications Bell */}
-                <Link to="/notifications" className="nav-icon-btn" aria-label="Notifications">
-                  <BellIcon size={20} />
-                  {unreadCount > 0 && (
-                    <span className="nav-notification-badge">{unreadCount}</span>
+                {/* Notifications Dropdown */}
+                <div
+                  className="notification-menu-container"
+                  ref={notificationMenuRef}
+                >
+                  <button
+                    type="button"
+                    className="nav-icon-btn"
+                    aria-label="Notifications"
+                    aria-expanded={notificationDropdownOpen}
+                    onClick={() => setNotificationDropdownOpen(prev => !prev)}
+                  >
+                    <BellIcon size={20} />
+
+                    {unreadCount > 0 && (
+                      <span className="nav-notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+
+                  {notificationDropdownOpen && (
+                    <div className="notification-dropdown-card">
+                      <div className="notification-dropdown-header">
+                        <h3>Notifications</h3>
+
+                        {unreadCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={markAllNotificationsAsRead}
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="notification-dropdown-list">
+                        {notifications.length === 0 ? (
+                          <div className="notification-dropdown-empty">
+                            <BellIcon size={24} />
+                            <p>No notifications yet</p>
+                          </div>
+                        ) : (
+                          notifications.slice(0, 5).map(notification => (
+                            <Link
+                              key={notification._id}
+                              to={getNotificationTarget(notification)}
+                              className={`notification-dropdown-item ${
+                                notification.isRead ? 'read' : 'unread'
+                              }`}
+                              onClick={() => {
+                                if (!notification.isRead) {
+                                  markNotificationAsRead(notification._id);
+                                }
+                                setNotificationDropdownOpen(false);
+                              }}
+                            >
+                              <div className="notification-dropdown-item-content">
+                                <strong>{notification.title}</strong>
+                                <p>{notification.body}</p>
+                                <span>
+                                  {new Date(notification.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+
+                              {!notification.isRead && (
+                                <span className="notification-unread-dot" />
+                              )}
+                            </Link>
+                          ))
+                        )}
+                      </div>
+
+                      <Link
+                        to="/notifications"
+                        className="notification-dropdown-footer"
+                        onClick={() => setNotificationDropdownOpen(false)}
+                      >
+                        View All Notifications
+                      </Link>
+                    </div>
                   )}
-                </Link>
+                </div>
 
                 {/* User Profile Dropdown Trigger */}
                 <div className="profile-menu-container">

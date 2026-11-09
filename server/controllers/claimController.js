@@ -1,6 +1,22 @@
 const Claim = require("../models/Claim");
 const Item = require("../models/Item");
 const Conversation = require("../models/Conversation");
+const Notification = require("../models/Notification");
+
+// Deliver a saved notification to its recipient through Socket.IO
+const emitNotification = (req, notification) => {
+    const io = req.app.get("io");
+
+    if (!io) {
+        return;
+    }
+
+    io.to(`user:${notification.recipientId.toString()}`).emit(
+        "new_notification",
+        notification
+    );
+};
+
 
 // Create a new claim for a found item
 const createClaim = async (req, res) => {
@@ -82,6 +98,20 @@ const createClaim = async (req, res) => {
 
         item.status = "claim_pending";
         await item.save();
+
+        // Notify the finder when someone submits a claim
+        const notification = await Notification.create({
+            recipientId: item.createdBy,
+            type: "claim_received",
+            title: "New claim received",
+            body: `Someone submitted a claim for your item: ${item.title}`,
+            relatedItemId: item._id,
+            relatedClaimId: claim._id
+        });
+
+        // Deliver the notification in real time
+        emitNotification(req, notification);
+
 
         return res.status(201).json({
             success: true,
@@ -255,7 +285,22 @@ const updateClaimStatus = async (req, res) => {
         }
 
         await claim.save();
+        // Notify the claimant when their claim is accepted or rejected
+        if (status === "accepted" || status === "rejected") {
+            const notification = await Notification.create({
+                recipientId: claim.claimantId,
+                type: status === "accepted" ? "claim_accepted" : "claim_rejected",
+                title: status === "accepted" ? "Claim accepted" : "Claim rejected",
+                body: status === "accepted"
+                    ? `Your claim for ${claim.itemId.title} has been accepted`
+                    : `Your claim for ${claim.itemId.title} has been rejected`,
+                relatedItemId: claim.itemId._id,
+                relatedClaimId: claim._id
+            });
 
+            // Deliver the notification in real time
+            emitNotification(req, notification);
+        }
         // Create one conversation when a claim is accepted
         if (status === "accepted") {
             await Conversation.findOneAndUpdate(

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+
+import { useNotifications } from '../../context/NotificationContext';
 import NotificationCard from '../../components/dashboard/NotificationCard';
 import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
@@ -8,18 +8,26 @@ import { CheckIcon } from '../../components/common/Icons';
 import './NotificationsPage.css';
 
 export const NotificationsPage = () => {
-  const { currentUser } = useAuth();
-  const { notifications, markNotificationAsRead, markAllNotificationsAsRead } = useData();
-
+   const {
+    notifications,
+    unreadCount,
+    loading,
+    markNotificationAsRead,
+    markAllNotificationsAsRead
+  } = useNotifications();
   const [filter, setFilter] = useState('all'); // 'all' | 'unread'
 
-  const userNotifications = notifications.filter(n => n.recipientId === currentUser?._id);
+  const userNotifications = notifications;
 
   const filtered = filter === 'unread'
     ? userNotifications.filter(n => !n.isRead)
     : userNotifications;
 
-  const unreadCount = userNotifications.filter(n => !n.isRead).length;
+ 
+  if (loading) {
+    return null;
+  }
+
 
   return (
     <div className="notifications-page section-py">

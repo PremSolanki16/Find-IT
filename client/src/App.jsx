@@ -20,6 +20,7 @@ import ReportFound from './pages/ReportItem/ReportFound';
 import SubmitClaim from './pages/Claims/SubmitClaim';
 import ChatPage from './pages/Chat/ChatPage';
 import NotificationsPage from './pages/Notifications/NotificationsPage';
+import NotificationToast from './components/common/NotificationToast';
 
 // User Dashboard Pages
 import DashboardOverview from './pages/Dashboard/DashboardOverview';
@@ -36,7 +37,7 @@ import ManageItems from './pages/Admin/ManageItems';
 import ManageClaims from './pages/Admin/ManageClaims';
 import ManageReports from './pages/Admin/ManageReports';
 
-// Route Guards
+
 
 // Route Guards
 const ProtectedRoute = ({ children }) => {
@@ -76,6 +77,8 @@ const AdminRoute = ({ children }) => {
 
 export const App = () => {
   return (
+    <>
+      <NotificationToast />
     <Routes>
       {/* 1. Public Layout Routes */}
       <Route element={<PublicLayout />}>
@@ -194,6 +197,7 @@ export const App = () => {
       {/* Fallback to Home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 };
 

@@ -2,8 +2,9 @@
 const jwt = require("jsonwebtoken");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const Notification = require("../models/Notification");
 
-// Configure authenticated real-time chat events
+// Configure authenticated real-time chat and notification events
 const chatSocket = (io) => {
 
     // Verify the user's JWT before connecting
@@ -26,6 +27,9 @@ const chatSocket = (io) => {
     });
 
     io.on("connection", (socket) => {
+
+        // Join the authenticated user's private notification room
+        socket.join(`user:${socket.userId}`);
 
         // Join a conversation after verifying membership
         socket.on("join_conversation", async (conversationId) => {
@@ -50,6 +54,7 @@ const chatSocket = (io) => {
                 });
             }
         });
+
         // Leave a conversation room when switching chats
         socket.on("leave_conversation", (conversationId) => {
             if (typeof conversationId !== "string") {
@@ -58,6 +63,7 @@ const chatSocket = (io) => {
 
             socket.leave(conversationId);
         });
+
         // Save and deliver a message in real time
         socket.on("send_message", async (data) => {
             try {
@@ -88,6 +94,7 @@ const chatSocket = (io) => {
                     });
                     return;
                 }
+
                 // Ensure the socket has joined this conversation
                 if (!socket.rooms.has(conversationId)) {
                     socket.emit("message_error", {
@@ -108,6 +115,31 @@ const chatSocket = (io) => {
                 const savedMessage = await Message.findById(message._id)
                     .populate("senderId", "name avatarUrl");
 
+                // Find the other participant in the conversation
+                const recipientId = conversation.participantIds.find(
+                    (participantId) =>
+                        participantId.toString() !== socket.userId
+                );
+
+                // Create and deliver a notification to the other participant
+                if (recipientId) {
+                    const notification = await Notification.create({
+                        recipientId,
+                        type: "new_message",
+                        title: "New message",
+                        body: `${savedMessage.senderId.name} sent you a message`,
+                        relatedItemId: conversation.itemId,
+                        relatedConversationId: conversation._id
+                    });
+
+                    // Send the notification only to the recipient's private room
+                    io.to(`user:${recipientId.toString()}`).emit(
+                        "new_notification",
+                        notification
+                    );
+                }
+
+                // Deliver the message to everyone in the conversation
                 io.to(conversationId).emit("receive_message", savedMessage);
 
             } catch (error) {

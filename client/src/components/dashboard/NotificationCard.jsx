@@ -10,17 +10,27 @@ export const NotificationCard = ({
 }) => {
   if (!notification) return null;
 
+  // Get the correct destination based on notification type
   const getTargetLink = () => {
-    if (notification.relatedConversationId) {
-      return `/chat`;
+    switch (notification.type) {
+      case 'claim_received':
+        return '/dashboard/received-claims';
+
+      case 'claim_accepted':
+      case 'claim_rejected':
+        return '/dashboard/claims';
+
+      case 'new_message':
+        return '/chat';
+
+      case 'item_update':
+        return notification.relatedItemId
+          ? `/items/${notification.relatedItemId}`
+          : '/notifications';
+
+      default:
+        return '/notifications';
     }
-    if (notification.relatedClaimId) {
-      return `/dashboard/claims`;
-    }
-    if (notification.relatedItemId) {
-      return `/items/${notification.relatedItemId}`;
-    }
-    return `/notifications`;
   };
 
   const getIcon = () => {

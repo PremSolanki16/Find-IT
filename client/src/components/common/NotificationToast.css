@@ -1,0 +1,92 @@
+/* Notification Toast Container */
+.notification-toast {
+  position: fixed;
+  top: calc(var(--navbar-height) + var(--space-md));
+  right: var(--space-lg);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: var(--space-base);
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: modal-fade-in var(--transition-fast) ease-out;
+}
+
+/* Toast Icon */
+.notification-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+/* Toast Content */
+.notification-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-toast-content strong {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-heading);
+}
+
+.notification-toast-content p {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  color: var(--color-text-body);
+  overflow-wrap: anywhere;
+}
+
+.notification-toast-content a {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.notification-toast-content a:hover {
+  text-decoration: underline;
+}
+
+/* Close Button */
+.notification-toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.notification-toast-close:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-heading);
+}
+
+/* Mobile Layout */
+@media (max-width: 480px) {
+  .notification-toast {
+    top: calc(var(--navbar-height) + var(--space-sm));
+    right: var(--space-sm);
+    left: var(--space-sm);
+    width: auto;
+  }
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getReceivedClaimsApi } from '../../services/api';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
+import { useNotifications } from '../../context/NotificationContext';
 import { 
   BellIcon, 
   MessageSquareIcon, 
@@ -14,7 +14,7 @@ import './DashboardSidebar.css';
 
 export const DashboardSidebar = ({ isAdminView = false }) => {
   const { currentUser, logout } = useAuth();
-  const { notifications } = useData();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
 
   // Store received claims fetched from the backend
@@ -35,7 +35,7 @@ export const DashboardSidebar = ({ isAdminView = false }) => {
   }, []);
 
   // Counts
-  const unreadNotifs = notifications.filter(n => n.recipientId === currentUser?._id && !n.isRead).length;
+  const unreadNotifs = unreadCount;
   const pendingClaimsCount = claims.filter(c => c.status === 'pending').length;
 
   const handleLogout = () => {
