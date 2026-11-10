@@ -19,7 +19,9 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
 const notificationMenuRef = useRef(null);
-// Close notification dropdown when clicking outside or pressing Escape
+const profileMenuRef = useRef(null);
+
+// Close dropdowns when clicking outside or pressing Escape
 useEffect(() => {
   const handleOutsideClick = (event) => {
     if (
@@ -28,11 +30,19 @@ useEffect(() => {
     ) {
       setNotificationDropdownOpen(false);
     }
+
+    if (
+      profileMenuRef.current &&
+      !profileMenuRef.current.contains(event.target)
+    ) {
+      setProfileDropdownOpen(false);
+    }
   };
 
   const handleEscapeKey = (event) => {
     if (event.key === 'Escape') {
       setNotificationDropdownOpen(false);
+      setProfileDropdownOpen(false);
     }
   };
 
@@ -44,6 +54,7 @@ useEffect(() => {
     document.removeEventListener('keydown', handleEscapeKey);
   };
 }, []);
+
   const navigate = useNavigate();
   // Get the destination page for each notification type
   const getNotificationTarget = (notification) => {
@@ -230,7 +241,7 @@ useEffect(() => {
                 </div>
 
                 {/* User Profile Dropdown Trigger */}
-                <div className="profile-menu-container">
+                <div className="profile-menu-container" ref={profileMenuRef}>
                   <button
                     type="button"
                     className="profile-avatar-btn"

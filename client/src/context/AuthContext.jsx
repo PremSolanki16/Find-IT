@@ -111,14 +111,23 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
+  // Update the current user's data across the application
+  const updateCurrentUser = (updatedData) => {
+      setCurrentUser((previousUser) => ({
+          ...previousUser,
+          ...updatedData
+      }));
+  };
+
   const value = {
-    currentUser,
-    isAuthLoading,
-    isAuthenticated: !!currentUser,
-    isAdmin: currentUser?.role === 'admin',
-    login,
-    signup,
-    logout
+      currentUser,
+      isAuthLoading,
+      isAuthenticated: !!currentUser,
+      isAdmin: currentUser?.role === 'admin',
+      login,
+      signup,
+      logout,
+      updateCurrentUser
   };
 
   return (

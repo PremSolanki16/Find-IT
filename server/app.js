@@ -9,6 +9,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
 // Middleware
 app.use(cors());
@@ -26,6 +27,8 @@ app.use("/api/conversations", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/admin", adminRoutes);
+// Profile Routes
+app.use("/api/profile", profileRoutes);
 
 // Test API
 app.get("/", (req, res) => {

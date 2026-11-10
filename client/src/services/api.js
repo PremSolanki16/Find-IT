@@ -380,3 +380,44 @@ export const createReportApi = (reportData) => {
         body: JSON.stringify(reportData)
     });
 };
+
+
+
+ 
+// Update the logged-in user's profile name
+export const updateProfileApi = (name) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/profile", {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ name })
+    });
+};
+
+
+// Upload the logged-in user's profile picture
+export const uploadProfileImageApi = (image) => {
+    const token = localStorage.getItem("findit_token");
+    const formData = new FormData();
+
+    formData.append("image", image);
+
+    return fetch(`${API_BASE_URL}/profile/upload-image`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    }).then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Profile image upload failed");
+        }
+
+        return data;
+    });
+};
