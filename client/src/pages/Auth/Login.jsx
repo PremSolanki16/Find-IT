@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import { forgotPasswordApi } from '../../services/api';
 import { validateEmail, validatePassword } from '../../utils/validators';
 import './Auth.css';
 
@@ -20,7 +21,9 @@ export const Login = () => {
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
-
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  
   const validate = () => {
     const errs = {};
     const emailErr = validateEmail(email);
@@ -52,25 +55,29 @@ const handleSubmit = async (e) => {
 };
 
 
-  // Quick Demo fill helpers
-  const fillAsUser = () => {
-    setEmail('prem@example.com');
-    setPassword('password123');
-    setErrors({});
-    setGeneralError('');
-  };
 
-  const fillAsAdmin = () => {
-    setEmail('admin@findit.org');
-    setPassword('admin1234');
-    setErrors({});
-    setGeneralError('');
-  };
+  // Request a password reset link through the backend
+  const handleForgotSubmit = async (e) => {
+      e.preventDefault();
 
-  const handleForgotSubmit = (e) => {
-    e.preventDefault();
-    if (validateEmail(forgotEmail)) return;
-    setForgotSuccess(true);
+      const emailError = validateEmail(forgotEmail);
+
+      if (emailError) {
+          setForgotError(emailError);
+          return;
+      }
+
+      setForgotError('');
+      setForgotLoading(true);
+
+      try {
+          await forgotPasswordApi(forgotEmail.trim().toLowerCase());
+          setForgotSuccess(true);
+      } catch (error) {
+          setForgotError(error.message || 'Unable to process your request.');
+      } finally {
+          setForgotLoading(false);
+      }
   };
 
   return (
@@ -88,18 +95,7 @@ const handleSubmit = async (e) => {
         </div>
       )}
 
-      {/* Demo Fast-Fill Bar */}
-      <div className="auth-demo-fill">
-        <span className="demo-fill-label">Demo Quick-Fill:</span>
-        <div className="demo-fill-buttons">
-          <button type="button" className="demo-fill-btn" onClick={fillAsUser}>
-            Student (Prem)
-          </button>
-          <button type="button" className="demo-fill-btn admin" onClick={fillAsAdmin}>
-            Admin (Sarah)
-          </button>
-        </div>
-      </div>
+      
 
       <form className="auth-actual-form" onSubmit={handleSubmit}>
         <Input
@@ -142,6 +138,7 @@ const handleSubmit = async (e) => {
             onClick={() => {
               setForgotEmail(email);
               setForgotSuccess(false);
+              setForgotError('');
               setForgotModalOpen(true);
             }}
           >
@@ -185,7 +182,10 @@ const handleSubmit = async (e) => {
           <div className="forgot-success-box">
             <span className="success-icon">✉️</span>
             <h4>Check your inbox</h4>
-            <p>We've dispatched a simulated recovery code to <strong>{forgotEmail}</strong>.</p>
+            <p>
+                If an account exists with this email, a password reset link will be sent.
+                Please check your inbox.
+            </p>
           </div>
         ) : (
           <form onSubmit={handleForgotSubmit}>
@@ -200,12 +200,21 @@ const handleSubmit = async (e) => {
               placeholder="name@example.com"
               required
             />
+            {forgotError && (
+                <div className="auth-alert error">
+                    {forgotError}
+                </div>
+            )}
             <div className="modal-actions-right">
               <Button type="button" variant="outline" onClick={() => setForgotModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                Send Reset Link
+              <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={forgotLoading}
+              >
+                  Send Reset Link
               </Button>
             </div>
           </form>

@@ -13,6 +13,7 @@ import BrowseItems from './pages/BrowseItems/BrowseItems';
 import ItemDetails from './pages/ItemDetails/ItemDetails';
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
+import ResetPassword from './pages/Auth/ResetPassword';
 
 // User Action Pages
 import ReportLost from './pages/ReportItem/ReportLost';
@@ -159,6 +160,7 @@ export const App = () => {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Route>
 
       {/* 3. User Dashboard Layout Routes */}
