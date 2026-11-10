@@ -252,3 +252,115 @@ export const markAllNotificationsAsReadApi = () => {
         }
     });
 };
+
+
+// Get admin dashboard statistics
+export const getAdminOverviewApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/admin/overview", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Get all users for admin management
+export const getAdminUsersApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/admin/users", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Update a user's account status
+export const updateAdminUserStatusApi = (userId, accountStatus) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/admin/users/${userId}/status`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ accountStatus })
+    });
+};
+
+// Get all items for admin moderation
+export const getAdminItemsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/admin/items", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Remove an item through admin moderation
+export const removeAdminItemApi = (itemId) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/admin/items/${itemId}/remove`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Get all claims for admin auditing
+export const getAdminClaimsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/admin/claims", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Get all reports for admin moderation
+export const getAdminReportsApi = () => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/reports", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
+// Update a report's status and admin note
+export const updateAdminReportStatusApi = (reportId, status, adminNote = "") => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/reports/${reportId}/status`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status, adminNote })
+    });
+};
+
+// Submit a report against an item, user, or message
+export const createReportApi = (reportData) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest("/reports", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(reportData)
+    });
+};

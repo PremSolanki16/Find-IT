@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
+import { getAdminItemsApi, removeAdminItemApi } from '../../services/api';
 import DataTable from '../../components/dashboard/DataTable';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
@@ -11,22 +11,56 @@ import { formatDate, getCategoryLabel } from '../../utils/formatters';
 import './AdminPages.css';
 
 export const ManageItems = () => {
-  const { items, deleteItem } = useData();
-  const { availableUsers } = useAuth();
-
+  const [items, setItems] = useState([]);
   const [typeFilter, setTypeFilter] = useState('all');
   const [deleteTargetItem, setDeleteTargetItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
 
-  const handleDeleteConfirm = () => {
-    if (deleteTargetItem) {
-      deleteItem(deleteTargetItem._id);
+  // Fetch all item postings from the backend
+  const fetchItems = async () => {
+    try {
+      setError('');
+      const response = await getAdminItemsApi();
+      setItems(response.items);
+    } catch (error) {
+      setError(error.message || 'Failed to load item postings');
+    } finally {
+      setIsLoading(false);
     }
-    setDeleteTargetItem(null);
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  // Remove an item through the admin moderation API
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetItem) return;
+
+    try {
+      setActionError('');
+
+      await removeAdminItemApi(deleteTargetItem._id);
+
+      setItems(prev =>
+        prev.map(item =>
+          item._id === deleteTargetItem._id
+            ? { ...item, status: 'removed' }
+            : item
+        )
+      );
+
+      setDeleteTargetItem(null);
+    } catch (error) {
+      setActionError(error.message || 'Failed to remove item');
+    }
   };
 
   const filteredItems = typeFilter === 'all'
     ? items
-    : items.filter(i => i.type === typeFilter);
+    : items.filter(item => item.type === typeFilter);
 
   const columns = [
     {
@@ -43,7 +77,9 @@ export const ManageItems = () => {
             <Link to={`/items/${row._id}`} className="table-item-title-link">
               {row.title}
             </Link>
-            <span className="table-item-category">{getCategoryLabel(row.category)}</span>
+            <span className="table-item-category">
+              {getCategoryLabel(row.category)}
+            </span>
           </div>
         </div>
       )
@@ -59,10 +95,7 @@ export const ManageItems = () => {
     },
     {
       header: 'Creator',
-      render: (row) => {
-        const creator = availableUsers.find(u => u._id === row.createdBy);
-        return creator ? creator.name : 'Unknown User';
-      }
+      render: (row) => row.createdBy?.name || 'Unknown User'
     },
     {
       header: 'Status',
@@ -83,19 +116,40 @@ export const ManageItems = () => {
               View
             </Button>
           </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-danger"
-            icon={<TrashIcon size={14} />}
-            onClick={() => setDeleteTargetItem(row)}
-          >
-            Delete
-          </Button>
+          {row.status !== 'removed' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-danger"
+              icon={<TrashIcon size={14} />}
+              onClick={() => {
+                setActionError('');
+                setDeleteTargetItem(row);
+              }}
+            >
+              Delete
+            </Button>
+          )}
         </div>
       )
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="admin-page-container">
+        <p>Loading item postings...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page-container">
+        <p className="text-danger">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page-container">
@@ -120,17 +174,21 @@ export const ManageItems = () => {
             className={`admin-type-btn ${typeFilter === 'lost' ? 'active' : ''}`}
             onClick={() => setTypeFilter('lost')}
           >
-            Lost ({items.filter(i => i.type === 'lost').length})
+            Lost ({items.filter(item => item.type === 'lost').length})
           </button>
           <button
             type="button"
             className={`admin-type-btn ${typeFilter === 'found' ? 'active' : ''}`}
             onClick={() => setTypeFilter('found')}
           >
-            Found ({items.filter(i => i.type === 'found').length})
+            Found ({items.filter(item => item.type === 'found').length})
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <p className="text-danger">{actionError}</p>
+      )}
 
       <DataTable
         columns={columns}
@@ -145,11 +203,13 @@ export const ManageItems = () => {
         confirmText="Confirm Delete"
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteTargetItem(null)}
+        onCancel={() => {
+          setDeleteTargetItem(null);
+          setActionError('');
+        }}
       />
     </div>
   );
 };
 
 export default ManageItems;
-

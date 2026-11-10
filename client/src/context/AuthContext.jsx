@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockUsers } from '../data/mockUsers';
 import {
   registerUser as registerUserApi,
   loginUser as loginUserApi,
@@ -16,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch (error) {
         return null;
       }
     }
@@ -24,10 +23,9 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
-  const [availableUsers, setAvailableUsers] = useState(mockUsers);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Convert backend user response to existing frontend user structure
+  // Convert backend user response to the existing frontend user structure
   const formatUser = (user) => ({
     ...user,
     _id: user.id || user._id
@@ -57,11 +55,6 @@ export const AuthProvider = ({ children }) => {
         const user = formatUser(response.user);
 
         setCurrentUser(user);
-
-        setAvailableUsers(prev => [
-          user,
-          ...prev.filter(u => u._id !== user._id)
-        ]);
 
       } catch (error) {
         // Clear session only when the backend rejects authentication
@@ -94,63 +87,38 @@ export const AuthProvider = ({ children }) => {
     const user = formatUser(response.user);
 
     localStorage.setItem('findit_token', response.token);
-
     setCurrentUser(user);
-    setAvailableUsers(prev => [
-      user,
-      ...prev.filter(u => u._id !== user._id)
-    ]);
 
     return user;
   };
 
-
   // Register a new user
-const signup = async (userData) => {
-  const credentials = {
-    name: userData.name.trim(),
-    email: userData.email.trim().toLowerCase(),
-    password: userData.password
+  const signup = async (userData) => {
+    const credentials = {
+      name: userData.name.trim(),
+      email: userData.email.trim().toLowerCase(),
+      password: userData.password
+    };
+
+    const response = await registerUserApi(credentials);
+
+    return response;
   };
 
-  const response = await registerUserApi(credentials);
-
-  return response;
-};
   // Logout current user
   const logout = () => {
     localStorage.removeItem('findit_token');
     setCurrentUser(null);
   };
 
-  
-
-  // Existing user status management
-  const updateUserStatus = (userId, newStatus) => {
-    setAvailableUsers(prev =>
-      prev.map(u =>
-        u._id === userId ? { ...u, accountStatus: newStatus } : u
-      )
-    );
-
-    if (currentUser && currentUser._id === userId) {
-      setCurrentUser(prev => ({
-        ...prev,
-        accountStatus: newStatus
-      }));
-    }
-  };
-
   const value = {
     currentUser,
     isAuthLoading,
-    availableUsers,
     isAuthenticated: !!currentUser,
     isAdmin: currentUser?.role === 'admin',
     login,
     signup,
-    logout,
-    updateUserStatus
+    logout
   };
 
   return (

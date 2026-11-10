@@ -7,6 +7,8 @@ const app = express();
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // Middleware
 app.use(cors());
@@ -22,6 +24,9 @@ app.use("/api/conversations", conversationRoutes);
 // Message Routes
 app.use("/api/conversations", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/admin", adminRoutes);
+
 // Test API
 app.get("/", (req, res) => {
     res.status(200).json({

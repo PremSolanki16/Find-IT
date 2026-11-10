@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  getAdminUsersApi,
+  updateAdminUserStatusApi
+} from '../../services/api';
 import DataTable from '../../components/dashboard/DataTable';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
@@ -8,18 +13,56 @@ import { formatDate } from '../../utils/formatters';
 import './AdminPages.css';
 
 export const ManageUsers = () => {
-  const { availableUsers, updateUserStatus, currentUser } = useAuth();
+  const { currentUser } = useAuth();
 
+  const [availableUsers, setAvailableUsers] = useState([]);
   const [targetUser, setTargetUser] = useState(null);
-  const [dialogAction, setDialogAction] = useState(null); // 'suspend' | 'activate'
+  const [dialogAction, setDialogAction] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
 
-  const handleConfirmStatusChange = () => {
-    if (targetUser && dialogAction) {
-      const newStatus = dialogAction === 'suspend' ? 'suspended' : 'active';
-      updateUserStatus(targetUser._id, newStatus);
+  // Fetch registered users from the backend
+  const fetchUsers = async () => {
+    try {
+      setError('');
+      const response = await getAdminUsersApi();
+      setAvailableUsers(response.users);
+    } catch (error) {
+      setError(error.message || 'Failed to load users');
+    } finally {
+      setIsLoading(false);
     }
-    setTargetUser(null);
-    setDialogAction(null);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Update a user's account status through the backend
+  const handleConfirmStatusChange = async () => {
+    if (!targetUser || !dialogAction) return;
+
+    try {
+      setActionError('');
+
+      const newStatus = dialogAction === 'suspend' ? 'suspended' : 'active';
+
+      await updateAdminUserStatusApi(targetUser._id, newStatus);
+
+      setAvailableUsers(prev =>
+        prev.map(user =>
+          user._id === targetUser._id
+            ? { ...user, accountStatus: newStatus }
+            : user
+        )
+      );
+
+      setTargetUser(null);
+      setDialogAction(null);
+    } catch (error) {
+      setActionError(error.message || 'Failed to update user status');
+    }
   };
 
   const columns = [
@@ -74,6 +117,7 @@ export const ManageUsers = () => {
                 size="sm"
                 className="text-danger"
                 onClick={() => {
+                  setActionError('');
                   setTargetUser(row);
                   setDialogAction('suspend');
                 }}
@@ -86,6 +130,7 @@ export const ManageUsers = () => {
                 size="sm"
                 className="text-success"
                 onClick={() => {
+                  setActionError('');
                   setTargetUser(row);
                   setDialogAction('activate');
                 }}
@@ -99,6 +144,22 @@ export const ManageUsers = () => {
     }
   ];
 
+  if (isLoading) {
+    return (
+      <div className="admin-page-container">
+        <p>Loading registered users...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page-container">
+        <p className="text-danger">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page-container">
       <div className="admin-page-header">
@@ -109,6 +170,10 @@ export const ManageUsers = () => {
           </p>
         </div>
       </div>
+
+      {actionError && (
+        <p className="text-danger">{actionError}</p>
+      )}
 
       <DataTable
         columns={columns}
@@ -127,11 +192,14 @@ export const ManageUsers = () => {
         confirmText={dialogAction === 'suspend' ? 'Suspend User' : 'Restore User'}
         confirmVariant={dialogAction === 'suspend' ? 'danger' : 'primary'}
         onConfirm={handleConfirmStatusChange}
-        onCancel={() => setTargetUser(null)}
+        onCancel={() => {
+          setTargetUser(null);
+          setDialogAction(null);
+          setActionError('');
+        }}
       />
     </div>
   );
 };
 
 export default ManageUsers;
-

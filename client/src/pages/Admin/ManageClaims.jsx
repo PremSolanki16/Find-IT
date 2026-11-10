@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
+import { getAdminClaimsApi } from '../../services/api';
 import DataTable from '../../components/dashboard/DataTable';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
@@ -10,21 +10,40 @@ import { formatDate } from '../../utils/formatters';
 import './AdminPages.css';
 
 export const ManageClaims = () => {
-  const { claims, items } = useData();
-  const { availableUsers } = useAuth();
-
+  const [claims, setClaims] = useState([]);
   const [inspectClaim, setInspectClaim] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch all claims with their item and claimant details
+  useEffect(() => {
+    const fetchClaims = async () => {
+      try {
+        const response = await getAdminClaimsApi();
+        setClaims(response.claims);
+      } catch (error) {
+        setError(error.message || 'Failed to load claims');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClaims();
+  }, []);
 
   const columns = [
     {
       header: 'Claim ID',
       accessor: '_id',
-      render: (row) => <span className="font-mono text-xs">{row._id}</span>
+      render: (row) => (
+        <span className="font-mono text-xs">{row._id}</span>
+      )
     },
     {
       header: 'Claimed Item',
       render: (row) => {
-        const item = items.find(i => i._id === row.itemId);
+        const item = row.itemId;
+
         return item ? (
           <Link to={`/items/${item._id}`} className="table-item-title-link">
             {item.title}
@@ -34,10 +53,7 @@ export const ManageClaims = () => {
     },
     {
       header: 'Claimant',
-      render: (row) => {
-        const claimant = availableUsers.find(u => u._id === row.claimantId);
-        return claimant ? claimant.name : 'Unknown';
-      }
+      render: (row) => row.claimantId?.name || 'Unknown'
     },
     {
       header: 'Status',
@@ -63,8 +79,24 @@ export const ManageClaims = () => {
     }
   ];
 
-  const inspectItem = inspectClaim ? items.find(i => i._id === inspectClaim.itemId) : null;
-  const inspectClaimant = inspectClaim ? availableUsers.find(u => u._id === inspectClaim.claimantId) : null;
+  const inspectItem = inspectClaim?.itemId;
+  const inspectClaimant = inspectClaim?.claimantId;
+
+  if (isLoading) {
+    return (
+      <div className="admin-page-container">
+        <p>Loading claims...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page-container">
+        <p className="text-danger">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page-container">
@@ -99,7 +131,8 @@ export const ManageClaims = () => {
           <div className="claim-audit-modal-body">
             <div className="audit-meta-banner">
               <div>
-                <strong>Claim Reference:</strong> <span className="font-mono">{inspectClaim._id}</span>
+                <strong>Claim Reference:</strong>{' '}
+                <span className="font-mono">{inspectClaim._id}</span>
               </div>
               <StatusBadge status={inspectClaim.status} size="sm" />
             </div>
@@ -107,14 +140,22 @@ export const ManageClaims = () => {
             <div className="audit-parties-grid">
               <div className="party-box">
                 <span className="party-label">Claimed Item:</span>
-                <span className="party-val">{inspectItem?.title || 'Unknown Item'}</span>
-                <span className="party-sub">Location: {inspectItem?.locationName}</span>
+                <span className="party-val">
+                  {inspectItem?.title || 'Unknown Item'}
+                </span>
+                <span className="party-sub">
+                  Location: {inspectItem?.locationName || 'Unknown'}
+                </span>
               </div>
 
               <div className="party-box">
                 <span className="party-label">Claimant:</span>
-                <span className="party-val">{inspectClaimant?.name || 'Verified Member'}</span>
-                <span className="party-sub">{inspectClaimant?.email}</span>
+                <span className="party-val">
+                  {inspectClaimant?.name || 'Verified Member'}
+                </span>
+                <span className="party-sub">
+                  {inspectClaimant?.email}
+                </span>
               </div>
             </div>
 
@@ -123,8 +164,12 @@ export const ManageClaims = () => {
               {inspectClaim.answers && inspectClaim.answers.length > 0 ? (
                 inspectClaim.answers.map((ans, idx) => (
                   <div key={idx} className="qa-block">
-                    <div className="qa-question"><strong>Q{idx + 1}:</strong> {ans.question}</div>
-                    <div className="qa-answer"><strong>Answer:</strong> "{ans.answer}"</div>
+                    <div className="qa-question">
+                      <strong>Q{idx + 1}:</strong> {ans.question}
+                    </div>
+                    <div className="qa-answer">
+                      <strong>Answer:</strong> "{ans.answer}"
+                    </div>
                   </div>
                 ))
               ) : (
@@ -145,4 +190,3 @@ export const ManageClaims = () => {
 };
 
 export default ManageClaims;
-

@@ -1,7 +1,10 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
+import {
+  getAdminOverviewApi,
+  getAdminReportsApi
+} from '../../services/api';
 import StatCard from '../../components/dashboard/StatCard';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
@@ -10,16 +13,63 @@ import { formatDate } from '../../utils/formatters';
 import './AdminPages.css';
 
 export const AdminOverview = () => {
-  const { items, claims, reports } = useData();
-  const { availableUsers } = useAuth();
   const navigate = useNavigate();
 
-  // Statistics
-  const totalUsers = availableUsers.length;
-  const totalPosts = items.length;
-  const totalClaims = claims.length;
-  const completedReturns = claims.filter(c => c.status === 'completed').length;
-  const openReports = reports.filter(r => r.status === 'open' || r.status === 'under_review');
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPosts: 0,
+    totalClaims: 0,
+    completedReturns: 0
+  });
+
+  const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch dashboard statistics and reports from the backend
+  useEffect(() => {
+    const fetchAdminOverview = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+
+        const [overviewResponse, reportsResponse] = await Promise.all([
+          getAdminOverviewApi(),
+          getAdminReportsApi()
+        ]);
+
+        setStats(overviewResponse.stats);
+        setReports(reportsResponse.reports);
+
+      } catch (error) {
+        setError(error.message || 'Failed to load admin dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAdminOverview();
+  }, []);
+
+  const openReports = reports.filter(
+    report => report.status === 'open' || report.status === 'under_review'
+  );
+
+  if (isLoading) {
+    return (
+      <div className="admin-page-container">
+        <p>Loading admin dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page-container">
+        <p className="text-danger">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-overview-root">
@@ -27,7 +77,7 @@ export const AdminOverview = () => {
       <div className="admin-stats-grid">
         <StatCard
           title="Total Registered Users"
-          value={totalUsers}
+          value={stats.totalUsers}
           subtitle="Verified campus members"
           icon="👥"
           variant="primary"
@@ -35,7 +85,7 @@ export const AdminOverview = () => {
         />
         <StatCard
           title="Total Item Posts"
-          value={totalPosts}
+          value={stats.totalPosts}
           subtitle="Lost and found listings"
           icon="📦"
           variant="primary"
@@ -43,7 +93,7 @@ export const AdminOverview = () => {
         />
         <StatCard
           title="Total Claims Logged"
-          value={totalClaims}
+          value={stats.totalClaims}
           subtitle="Ownership requests submitted"
           icon="⚖️"
           variant="warning"
@@ -51,7 +101,7 @@ export const AdminOverview = () => {
         />
         <StatCard
           title="Completed Returns"
-          value={completedReturns}
+          value={stats.completedReturns}
           subtitle="Verified handovers"
           icon="🤝"
           variant="success"
@@ -66,16 +116,22 @@ export const AdminOverview = () => {
             <div className="admin-badge-row">
               <span className="admin-queue-tag">Moderation Queue</span>
               {openReports.length > 0 && (
-                <span className="admin-alert-pill">{openReports.length} pending action</span>
+                <span className="admin-alert-pill">
+                  {openReports.length} pending action
+                </span>
               )}
             </div>
-            <h3 className="admin-card-title">Urgent Reports & Community Flags</h3>
+            <h3 className="admin-card-title">
+              Urgent Reports & Community Flags
+            </h3>
             <p className="admin-card-sub">
               Review flagged postings, suspected spam, scams, or reported campus accounts.
             </p>
           </div>
           <Link to="/admin/reports">
-            <Button variant="outline" size="sm">Manage All Reports →</Button>
+            <Button variant="outline" size="sm">
+              Manage All Reports →
+            </Button>
           </Link>
         </div>
 
@@ -103,12 +159,18 @@ export const AdminOverview = () => {
                   <tr key={report._id}>
                     <td className="font-mono">{report._id}</td>
                     <td className="capitalize">{report.targetType}</td>
-                    <td><span className="reason-pill">{report.reason}</span></td>
+                    <td>
+                      <span className="reason-pill">{report.reason}</span>
+                    </td>
                     <td>{formatDate(report.createdAt)}</td>
-                    <td><StatusBadge status={report.status} size="sm" /></td>
+                    <td>
+                      <StatusBadge status={report.status} size="sm" />
+                    </td>
                     <td>
                       <Link to="/admin/reports">
-                        <Button variant="ghost" size="sm">Review →</Button>
+                        <Button variant="ghost" size="sm">
+                          Review →
+                        </Button>
                       </Link>
                     </td>
                   </tr>
@@ -126,7 +188,9 @@ export const AdminOverview = () => {
           <h4>User Accounts Management</h4>
           <p>Inspect registered profiles, monitor verified status, and suspend abusive users.</p>
           <Link to="/admin/users">
-            <Button variant="outline" size="sm" fullWidth>Open Users Directory</Button>
+            <Button variant="outline" size="sm" fullWidth>
+              Open Users Directory
+            </Button>
           </Link>
         </div>
 
@@ -135,7 +199,9 @@ export const AdminOverview = () => {
           <h4>Items Content Moderation</h4>
           <p>Review all active and closed postings; remove inappropriate or guideline-violating items.</p>
           <Link to="/admin/items">
-            <Button variant="outline" size="sm" fullWidth>Audit Item Listings</Button>
+            <Button variant="outline" size="sm" fullWidth>
+              Audit Item Listings
+            </Button>
           </Link>
         </div>
 
@@ -144,7 +210,9 @@ export const AdminOverview = () => {
           <h4>Claims & Return Audits</h4>
           <p>Audit verification answers, examine disputed handovers, and track success rate.</p>
           <Link to="/admin/claims">
-            <Button variant="outline" size="sm" fullWidth>Audit Claims Registry</Button>
+            <Button variant="outline" size="sm" fullWidth>
+              Audit Claims Registry
+            </Button>
           </Link>
         </div>
       </div>
@@ -153,4 +221,3 @@ export const AdminOverview = () => {
 };
 
 export default AdminOverview;
-

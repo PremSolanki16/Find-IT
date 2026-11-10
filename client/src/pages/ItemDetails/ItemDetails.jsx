@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getItemByIdApi, getMyClaimsApi } from '../../services/api';
-
+import {
+  getItemByIdApi,
+  getMyClaimsApi,
+  createReportApi
+} from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
@@ -21,7 +24,7 @@ import './ItemDetails.css';
 export const ItemDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
- //const { submitReport } = useData();
+ 
   const { currentUser, isAuthenticated } = useAuth();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -29,6 +32,11 @@ export const ItemDetails = () => {
   const [reportReason, setReportReason] = useState('spam');
   const [reportDetails, setReportDetails] = useState('');
   const [reportSuccess, setReportSuccess] = useState(false);
+ 
+  const [reportError, setReportError] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+ 
+ 
   // Store the item fetched from the backend
   const [item, setItem] = useState(null);
 
@@ -121,20 +129,41 @@ export const ItemDetails = () => {
     navigate(`/claims/${item._id}`);
   };
 
-  const handleReportSubmit = (e) => {
+  // Submit an item report to the backend
+  const handleReportSubmit = async (e) => {
     e.preventDefault();
-    submitReport({
-      targetType: 'item',
-      itemId: item._id,
-      reason: reportReason,
-      details: reportDetails
-    });
-    setReportSuccess(true);
-    setTimeout(() => {
+
+    if (!isAuthenticated) {
       setReportModalOpen(false);
-      setReportSuccess(false);
-      setReportDetails('');
-    }, 1500);
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setIsSubmittingReport(true);
+      setReportError('');
+
+      await createReportApi({
+        targetType: 'item',
+        itemId: item._id,
+        reason: reportReason,
+        details: reportDetails
+      });
+
+      setReportSuccess(true);
+
+      setTimeout(() => {
+        setReportModalOpen(false);
+        setReportSuccess(false);
+        setReportDetails('');
+        setReportReason('spam');
+      }, 1500);
+
+    } catch (error) {
+      setReportError(error.message || 'Failed to submit report.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
   return (
@@ -372,14 +401,33 @@ export const ItemDetails = () => {
               />
             </FormField>
 
+            
+            {reportError && (
+              <p className="text-danger">{reportError}</p>
+            )}
+
             <div className="modal-actions-right">
-              <Button variant="outline" type="button" onClick={() => setReportModalOpen(false)}>
+              <Button
+                variant="outline"
+                type="button"
+                disabled={isSubmittingReport}
+                onClick={() => {
+                  setReportModalOpen(false);
+                  setReportError('');
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="danger" type="submit">
-                Submit Report
+
+              <Button
+                variant="danger"
+                type="submit"
+                disabled={isSubmittingReport}
+              >
+                {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
               </Button>
             </div>
+
           </form>
         )}
       </Modal>

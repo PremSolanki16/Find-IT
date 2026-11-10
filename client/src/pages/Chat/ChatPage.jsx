@@ -11,7 +11,7 @@ import { createChatSocket } from '../../services/chatSocket';
 import './ChatPage.css';
 
 export const ChatPage = () => {
-  const { currentUser, availableUsers } = useAuth();
+  const { currentUser } = useAuth();
 
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -162,14 +162,13 @@ export const ChatPage = () => {
     itemId: conversation.itemId?._id
   }));
 
-  // Get users from the existing user list and conversation participants
-  const chatUsers = [
-    ...availableUsers,
-    ...conversations.flatMap((conversation) => conversation.participantIds)
-  ].filter(
-    (user, index, users) =>
-      users.findIndex((entry) => entry._id === user._id) === index
-  );
+  // Get unique users from backend conversation participants
+  const chatUsers = conversations
+    .flatMap((conversation) => conversation.participantIds)
+    .filter(
+      (user, index, users) =>
+        users.findIndex((entry) => entry._id === user._id) === index
+    );
 
   const activeConversation = conversations.find(
     (conversation) => conversation._id === selectedConvId

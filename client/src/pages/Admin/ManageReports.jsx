@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
+
+import React, { useEffect, useState } from 'react';
+import {
+  getAdminReportsApi,
+  updateAdminReportStatusApi
+} from '../../services/api';
 import DataTable from '../../components/dashboard/DataTable';
 import StatusBadge from '../../components/common/StatusBadge';
 import Button from '../../components/common/Button';
@@ -10,37 +13,89 @@ import { formatDate } from '../../utils/formatters';
 import './AdminPages.css';
 
 export const ManageReports = () => {
-  const { reports, updateReportStatus, items } = useData();
-  const { availableUsers } = useAuth();
-
+  const [reports, setReports] = useState([]);
   const [activeReport, setActiveReport] = useState(null);
   const [newStatus, setNewStatus] = useState('resolved');
   const [adminNote, setAdminNote] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
 
+  // Fetch all reports from the backend
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await getAdminReportsApi();
+        setReports(response.reports);
+      } catch (error) {
+        setError(error.message || 'Failed to load reports');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
+
+  // Open the existing report review modal
   const handleOpenReview = (report) => {
     setActiveReport(report);
     setNewStatus(report.status === 'open' ? 'under_review' : 'resolved');
     setAdminNote(report.adminNote || '');
+    setActionError('');
   };
 
-  const handleSaveDecision = (e) => {
+  // Save the moderation decision through the backend
+  const handleSaveDecision = async (e) => {
     e.preventDefault();
-    if (activeReport) {
-      updateReportStatus(activeReport._id, newStatus, adminNote);
+
+    if (!activeReport) return;
+
+    try {
+      setIsSaving(true);
+      setActionError('');
+
+      const response = await updateAdminReportStatusApi(
+        activeReport._id,
+        newStatus,
+        adminNote
+      );
+
+      setReports(prev =>
+        prev.map(report =>
+          report._id === activeReport._id
+            ? {
+                ...report,
+                status: response.report?.status || newStatus,
+                adminNote: response.report?.adminNote ?? adminNote
+              }
+            : report
+        )
+      );
+
+      setActiveReport(null);
+    } catch (error) {
+      setActionError(error.message || 'Failed to update report');
+    } finally {
+      setIsSaving(false);
     }
-    setActiveReport(null);
   };
 
   const columns = [
     {
       header: 'Report ID',
       accessor: '_id',
-      render: (row) => <span className="font-mono text-xs">{row._id}</span>
+      render: (row) => (
+        <span className="font-mono text-xs">{row._id}</span>
+      )
     },
     {
       header: 'Target Type',
       accessor: 'targetType',
-      render: (row) => <span className="target-pill capitalize">{row.targetType}</span>
+      render: (row) => (
+        <span className="target-pill capitalize">{row.targetType}</span>
+      )
     },
     {
       header: 'Reason',
@@ -49,10 +104,7 @@ export const ManageReports = () => {
     },
     {
       header: 'Filed By',
-      render: (row) => {
-        const reporter = availableUsers.find(u => u._id === row.reporterId);
-        return reporter ? reporter.name : 'Anonymous';
-      }
+      render: (row) => row.reporterId?.name || 'Anonymous'
     },
     {
       header: 'Status',
@@ -78,6 +130,22 @@ export const ManageReports = () => {
     }
   ];
 
+  if (isLoading) {
+    return (
+      <div className="admin-page-container">
+        <p>Loading reports...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-page-container">
+        <p className="text-danger">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page-container">
       <div className="admin-page-header">
@@ -89,6 +157,10 @@ export const ManageReports = () => {
         </div>
       </div>
 
+      {actionError && !activeReport && (
+        <p className="text-danger">{actionError}</p>
+      )}
+
       <DataTable
         columns={columns}
         data={reports}
@@ -98,7 +170,12 @@ export const ManageReports = () => {
       {/* Review Modal */}
       <Modal
         isOpen={!!activeReport}
-        onClose={() => setActiveReport(null)}
+        onClose={() => {
+          if (!isSaving) {
+            setActiveReport(null);
+            setActionError('');
+          }
+        }}
         title="Admin Report Review"
         size="md"
       >
@@ -115,7 +192,9 @@ export const ManageReports = () => {
               </div>
               <div className="report-info-row">
                 <span className="lbl">Details provided:</span>
-                <span className="val">{activeReport.details || 'No additional commentary provided.'}</span>
+                <span className="val">
+                  {activeReport.details || 'No additional commentary provided.'}
+                </span>
               </div>
             </div>
 
@@ -144,12 +223,24 @@ export const ManageReports = () => {
               />
             </FormField>
 
+            {actionError && (
+              <p className="text-danger">{actionError}</p>
+            )}
+
             <div className="modal-actions-right">
-              <Button type="button" variant="outline" onClick={() => setActiveReport(null)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setActiveReport(null);
+                  setActionError('');
+                }}
+                disabled={isSaving}
+              >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                Save Decision
+              <Button type="submit" variant="primary" disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save Decision'}
               </Button>
             </div>
           </form>
@@ -160,4 +251,3 @@ export const ManageReports = () => {
 };
 
 export default ManageReports;
-
