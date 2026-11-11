@@ -130,32 +130,20 @@ export const App = () => {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/chat" 
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/chat/:id" 
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/notifications" 
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          } 
-        />
       </Route>
 
+      {/* Chat and Notifications Routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat/:id" element={<ChatPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+      </Route>
       {/* 2. Authentication Layout Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />

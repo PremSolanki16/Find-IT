@@ -1,3 +1,4 @@
+
 .public-layout-root {
   min-height: 100vh;
   display: flex;
@@ -10,3 +11,20 @@
   flex-direction: column;
 }
 
+/* Browse page with authenticated user sidebar */
+.public-layout-main.browse-with-sidebar {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.browse-with-sidebar .dashboard-sidebar {
+  height: calc(100vh - var(--navbar-height));
+  top: var(--navbar-height);
+}
+
+.browse-layout-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}

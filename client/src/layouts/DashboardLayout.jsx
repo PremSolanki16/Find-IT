@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import './DashboardLayout.css';
 
@@ -9,54 +11,31 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const isAdminView = location.pathname.startsWith('/admin');
 
-  // // Derive title from pathname
-  // const getPageTitle = () => {
-  //   const path = location.pathname;
-  //   if (path === '/admin') return 'Admin Overview';
-  //   if (path === '/admin/users') return 'User Accounts';
-  //   if (path === '/admin/items') return 'Item Postings';
-  //   if (path === '/admin/claims') return 'Claim Audits';
-  //   if (path === '/admin/reports') return 'Content Reports';
-
-  //   if (path === '/dashboard') return 'Dashboard Overview';
-  //   if (path === '/dashboard/lost-items') return 'My Lost Items';
-  //   if (path === '/dashboard/found-items') return 'My Found Items';
-  //   if (path === '/dashboard/claims') return 'My Submitted Claims';
-  //   if (path === '/dashboard/received-claims') return 'Claims Received on My Posts';
-  //   if (path === '/dashboard/profile') return 'Account Profile';
-
-  //   return 'FindIt Dashboard';
-  // };
-
-  // const getPageSubtitle = () => {
-  //   const path = location.pathname;
-  //   if (isAdminView) return 'Campus moderation, compliance & system controls';
-  //   return 'Manage your reported belongings, incoming requests & return handovers';
-  // };
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
-
-    <>
+    <div className="dashboard-page">
       <Navbar />
 
-    <div className="dashboard-layout-root">
-      {/* Sidebar */}
-      <DashboardSidebar isAdminView={isAdminView} />
+      <div className="dashboard-layout-root">
+        <DashboardSidebar isAdminView={isAdminView} />
 
-      {/* Mobile Drawer Backdrop */}
-      {mobileSidebarOpen && (
-        <div 
-          className="dashboard-mobile-backdrop"
-          onClick={() => setMobileSidebarOpen(false)}
-        >
-          <div className="mobile-sidebar-drawer" onClick={(e) => e.stopPropagation()}>
-            <DashboardSidebar isAdminView={isAdminView} />
+        {mobileSidebarOpen && (
+          <div
+            className="dashboard-mobile-backdrop"
+            onClick={() => setMobileSidebarOpen(false)}
+          >
+            <div
+              className="mobile-sidebar-drawer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DashboardSidebar isAdminView={isAdminView} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-
-      {/* Main Content Area */}
         <div className="dashboard-main-area">
           <main className="dashboard-content-body">
             <button
@@ -70,10 +49,11 @@ export const DashboardLayout = () => {
             <Outlet />
           </main>
         </div>
+      </div>
+
+      <Footer />
     </div>
-    </>
   );
 };
 
 export default DashboardLayout;
-

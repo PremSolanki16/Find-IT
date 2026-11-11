@@ -1,23 +1,41 @@
 
+.dashboard-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
 .dashboard-layout-root {
   display: flex;
-  height: calc(100vh - var(--navbar-height));
-  min-height: 0;
+  flex: 1;
+  min-height: calc(100vh - var(--navbar-height));
+  align-items: flex-start;
   background-color: var(--color-bg-page);
 }
 
 .dashboard-layout-root .dashboard-sidebar {
-  height: 100%;
-  top: 0;
+  height: calc(100vh - var(--navbar-height));
+  min-height: 0;
+  align-self: flex-start;
+  position: sticky;
+  top: var(--navbar-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  scrollbar-width: none;
 }
+
+.dashboard-layout-root .dashboard-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
 
 .dashboard-main-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100%;
-  overflow-y: auto;
 }
 
 .dashboard-content-body {
@@ -61,7 +79,10 @@
 .mobile-sidebar-drawer .dashboard-sidebar {
   display: flex;
   height: 100%;
+  min-height: 0;
+  position: relative;
   top: 0;
+  overflow-y: hidden;
 }
 
 @media (max-width: 900px) {
