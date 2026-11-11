@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import DashboardNavbar from '../components/dashboard/DashboardNavbar';
 import './DashboardLayout.css';
-
+import Navbar from '../components/common/Navbar';
 export const DashboardLayout = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
@@ -35,6 +35,10 @@ export const DashboardLayout = () => {
   };
 
   return (
+
+    <>
+      <Navbar />
+
     <div className="dashboard-layout-root">
       {/* Sidebar */}
       <DashboardSidebar isAdminView={isAdminView} />
@@ -64,6 +68,7 @@ export const DashboardLayout = () => {
         </main>
       </div>
     </div>
+    </>
   );
 };
 

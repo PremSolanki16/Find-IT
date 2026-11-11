@@ -93,7 +93,7 @@ useEffect(() => {
     <>
       
       <header className="navbar-header">
-        <div className="container navbar-container">
+        <div className="container-fluid navbar-container">
           {/* Logo */}
           <Link to="/" className="navbar-brand" onClick={closeMenus}>
             <div className="brand-logo-mark">

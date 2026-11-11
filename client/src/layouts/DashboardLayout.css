@@ -1,18 +1,21 @@
 .dashboard-layout-root {
   display: flex;
-  min-height: 100vh;
+  height: calc(100vh - var(--navbar-height));
+  min-height: 0;
   background-color: var(--color-bg-page);
 }
-
+.dashboard-layout-root .dashboard-sidebar {
+  height: calc(100vh - var(--navbar-height));
+  top: var(--navbar-height);
+}
 .dashboard-main-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100vh;
+  height: 100%;
   overflow-y: auto;
 }
-
 .dashboard-content-body {
   flex: 1;
   padding: var(--space-2xl);

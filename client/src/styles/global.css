@@ -81,7 +81,14 @@ img {
   padding-left: var(--space-lg);
   padding-right: var(--space-lg);
 }
-
+.container-fluid {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
+}
 .content-container {
   width: 100%;
   max-width: var(--max-width-content);
