@@ -352,17 +352,41 @@
 
 /* Responsive Breakpoints */
 @media (max-width: 900px) {
-  .desktop-nav, .desktop-actions {
+  .navbar-header {
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: var(--navbar-height);
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .navbar-container {
+    width: 100%;
+    min-height: var(--navbar-height);
+    flex: 0 0 var(--navbar-height);
+  }
+
+  .desktop-nav,
+  .desktop-actions {
     display: none;
   }
+
   .mobile-menu-toggle {
     display: flex;
+    align-items: center;
+    justify-content: center;
   }
+
   .mobile-menu-drawer {
     display: block;
+    width: 100%;
+    max-height: none;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+    position: relative;
+    z-index: var(--z-dropdown);
   }
 }
-
 /* Notification Dropdown */
 .notification-menu-container {
   position: relative;

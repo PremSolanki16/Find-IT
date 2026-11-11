@@ -1,38 +1,38 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import DashboardSidebar from '../components/dashboard/DashboardSidebar';
-import DashboardNavbar from '../components/dashboard/DashboardNavbar';
-import './DashboardLayout.css';
 import Navbar from '../components/common/Navbar';
+import DashboardSidebar from '../components/dashboard/DashboardSidebar';
+import './DashboardLayout.css';
+
 export const DashboardLayout = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
   const isAdminView = location.pathname.startsWith('/admin');
 
-  // Derive title from pathname
-  const getPageTitle = () => {
-    const path = location.pathname;
-    if (path === '/admin') return 'Admin Overview';
-    if (path === '/admin/users') return 'User Accounts';
-    if (path === '/admin/items') return 'Item Postings';
-    if (path === '/admin/claims') return 'Claim Audits';
-    if (path === '/admin/reports') return 'Content Reports';
+  // // Derive title from pathname
+  // const getPageTitle = () => {
+  //   const path = location.pathname;
+  //   if (path === '/admin') return 'Admin Overview';
+  //   if (path === '/admin/users') return 'User Accounts';
+  //   if (path === '/admin/items') return 'Item Postings';
+  //   if (path === '/admin/claims') return 'Claim Audits';
+  //   if (path === '/admin/reports') return 'Content Reports';
 
-    if (path === '/dashboard') return 'Dashboard Overview';
-    if (path === '/dashboard/lost-items') return 'My Lost Items';
-    if (path === '/dashboard/found-items') return 'My Found Items';
-    if (path === '/dashboard/claims') return 'My Submitted Claims';
-    if (path === '/dashboard/received-claims') return 'Claims Received on My Posts';
-    if (path === '/dashboard/profile') return 'Account Profile';
+  //   if (path === '/dashboard') return 'Dashboard Overview';
+  //   if (path === '/dashboard/lost-items') return 'My Lost Items';
+  //   if (path === '/dashboard/found-items') return 'My Found Items';
+  //   if (path === '/dashboard/claims') return 'My Submitted Claims';
+  //   if (path === '/dashboard/received-claims') return 'Claims Received on My Posts';
+  //   if (path === '/dashboard/profile') return 'Account Profile';
 
-    return 'FindIt Dashboard';
-  };
+  //   return 'FindIt Dashboard';
+  // };
 
-  const getPageSubtitle = () => {
-    const path = location.pathname;
-    if (isAdminView) return 'Campus moderation, compliance & system controls';
-    return 'Manage your reported belongings, incoming requests & return handovers';
-  };
+  // const getPageSubtitle = () => {
+  //   const path = location.pathname;
+  //   if (isAdminView) return 'Campus moderation, compliance & system controls';
+  //   return 'Manage your reported belongings, incoming requests & return handovers';
+  // };
 
   return (
 
@@ -55,18 +55,21 @@ export const DashboardLayout = () => {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="dashboard-main-area">
-        <DashboardNavbar 
-          title={getPageTitle()} 
-          subtitle={getPageSubtitle()} 
-          onToggleSidebar={() => setMobileSidebarOpen(prev => !prev)}
-        />
 
-        <main className="dashboard-content-body">
-          <Outlet />
-        </main>
-      </div>
+      {/* Main Content Area */}
+        <div className="dashboard-main-area">
+          <main className="dashboard-content-body">
+            <button
+              type="button"
+              className="dashboard-mobile-menu-button"
+              onClick={() => setMobileSidebarOpen(prev => !prev)}
+            >
+              <span>☰</span> Dashboard Menu
+            </button>
+
+            <Outlet />
+          </main>
+        </div>
     </div>
     </>
   );
