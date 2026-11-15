@@ -11,7 +11,8 @@ export const ChatWindow = ({
   currentUserId,
   users = [],
   item = null,
-  onSendMessage
+  onSendMessage,
+  onBack
 }) => {
   const [inputText, setInputText] = useState('');
   const messagesContainerRef = useRef(null);
@@ -49,30 +50,41 @@ export const ChatWindow = ({
     <div className="chat-window-container">
       {/* Header */}
       <div className="chat-header">
-        <div className="chat-header-user">
-          <img
-            src={otherUser.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-            alt={otherUser.name}
-            className="chat-header-avatar"
-          />
-          <div className="chat-header-meta">
-            <h4 className="chat-partner-name">{otherUser.name}</h4>
-            {item && (
-              <span className="chat-item-context">
-                Regarding:{' '}
-                <Link to={`/items/${item._id}`} className="chat-item-link">
-                  {item.title}
-                </Link>
-              </span>
-            )}
-          </div>
-        </div>
+  <div className="chat-header-user">
+    <button
+      type="button"
+      className="chat-mobile-back-button"
+      onClick={onBack}
+      aria-label="Back to Direct Messages"
+    >
+      ←
+    </button>
 
-        <div className="chat-safety-pill">
-          <ShieldCheckIcon size={16} color="var(--color-success)" />
-          <span>Encrypted Private Thread</span>
-        </div>
-      </div>
+    <img
+      src={otherUser.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
+      alt={otherUser.name}
+      className="chat-header-avatar"
+    />
+
+    <div className="chat-header-meta">
+      <h4 className="chat-partner-name">{otherUser.name}</h4>
+
+      {item && (
+        <span className="chat-item-context">
+          Regarding:{' '}
+          <Link to={`/items/${item._id}`} className="chat-item-link">
+            {item.title}
+          </Link>
+        </span>
+      )}
+    </div>
+  </div>
+
+  <div className="chat-safety-pill">
+    <ShieldCheckIcon size={16} color="var(--color-success)" />
+    <span>Encrypted Private Thread</span>
+  </div>
+</div>
 
       {/* Handover Notice Banner */}
       <div className="chat-handover-tip">

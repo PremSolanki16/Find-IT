@@ -149,3 +149,31 @@
   color: var(--color-text-muted);
 }
 
+@media (max-width: 768px) {
+  .conversation-list-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+    flex: 1 1 100%;
+    border-right: none;
+  }
+
+  .conversation-list-header {
+    padding: var(--space-md);
+  }
+
+  .conv-search-box {
+    margin: var(--space-sm) var(--space-md);
+  }
+
+  .conversation-items-scroll {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .conversation-item-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}

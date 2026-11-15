@@ -1,5 +1,7 @@
 // Backend API base URL
-const API_BASE_URL = "http://localhost:5000/api";
+//const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "http://10.117.149.232:5000/api";
+
 
 // Common API request function
 const apiRequest = async (endpoint, options = {}) => {

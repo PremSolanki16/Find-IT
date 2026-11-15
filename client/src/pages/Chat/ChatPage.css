@@ -20,9 +20,46 @@
 @media (max-width: 768px) {
   .chat-page-root {
     padding: var(--space-xs);
+    min-width: 0;
   }
+
   .chat-page-container {
-    height: calc(100vh - var(--navbar-height) - 40px);
+    width: 100%;
+    height: calc(100dvh - var(--navbar-height) - 40px);
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Show the conversation list initially */
+  .conversation-list-panel {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+    border-right: none;
+  }
+
+  /* Hide chat until a conversation is selected */
+  .chat-window-container,
+  .chat-window-empty {
+    display: none;
+  }
+
+  /* When a conversation is selected, show only its chat */
+  .chat-page-container.mobile-chat-open .conversation-list-panel {
+    display: none;
+  }
+
+  .chat-page-container.mobile-chat-open .chat-window-container {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .chat-page-container.mobile-chat-open .chat-window-empty {
+    display: flex;
+    width: 100%;
   }
 }
-

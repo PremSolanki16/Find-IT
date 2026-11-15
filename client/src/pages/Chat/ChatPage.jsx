@@ -16,6 +16,7 @@ export const ChatPage = () => {
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [selectedConvId, setSelectedConvId] = useState(null);
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const socketRef = useRef(null);
@@ -180,21 +181,28 @@ export const ChatPage = () => {
   const activeMessages = messages.filter(
     (message) => message.conversationId === selectedConvId
   );
-
+  const handleSelectConversation = (conversationId) => {
+    setSelectedConvId(conversationId);
+    setIsMobileChatOpen(true);
+  };
   if (isLoading) {
     return <div className="chat-page-root">Loading conversations...</div>;
   }
 
   return (
     <div className="chat-page-root">
-      <div className="chat-page-container card">
+      <div
+        className={`chat-page-container card ${
+          isMobileChatOpen ? 'mobile-chat-open' : ''
+        }`}
+      >
         <ConversationList
           conversations={userConversations}
           currentUserId={currentUserId}
           users={chatUsers}
           items={conversations.map((conversation) => conversation.itemId)}
           selectedConversationId={selectedConvId}
-          onSelectConversation={setSelectedConvId}
+          onSelectConversation={handleSelectConversation}
         />
 
         <ChatWindow
@@ -219,6 +227,7 @@ export const ChatPage = () => {
           users={chatUsers}
           item={activeItem}
           onSendMessage={sendMessage}
+          onBack={() => setIsMobileChatOpen(false)}
         />
       </div>
     </div>

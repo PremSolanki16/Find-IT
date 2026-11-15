@@ -1,0 +1,246 @@
+/*
+ * FindIt responsive safety layer.
+ * Layout-only overrides: preserve every existing control, label, field and feature.
+ * Uses the existing variables.css tokens as the single design-token source.
+ */
+
+:where(*, *::before, *::after) {
+  min-width: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  max-width: 100%;
+}
+
+:where(.container, .container-fluid, .content-container) {
+  padding-inline: clamp(var(--space-sm), 3vw, var(--space-xl));
+}
+
+:where(.hero-title, .section-title-left, .browse-title, .subpage-title, .showcase-title) {
+  overflow-wrap: anywhere;
+}
+
+:where(.hero-section, .section-py, .cta-section) {
+  padding-block: clamp(var(--space-xl), 5vw, var(--space-5xl));
+}
+
+:where(.categories-grid, .dash-stats-grid, .dash-items-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+:where(.steps-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+:where(.browse-layout-grid) {
+  grid-template-columns: minmax(0, min(280px, 30%)) minmax(0, 1fr);
+}
+
+:where(.details-main-grid) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+:where(.profile-layout-grid) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+}
+
+:where(.auth-container-grid) {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
+:where(.auth-showcase-panel, .auth-form-card, .cta-card, .profile-overview-card, .profile-edit-card) {
+  min-width: 0;
+}
+
+:where(.table-wrapper) {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+}
+
+:where(.data-table) {
+  min-width: 36rem;
+}
+
+:where(.dashboard-content-body) {
+  padding-inline: clamp(var(--space-sm), 3vw, var(--space-2xl));
+}
+
+:where(.conversation-list-panel) {
+  width: clamp(15rem, 28vw, 20rem);
+  flex: 0 1 20rem;
+  min-width: min(100%, 15rem);
+}
+
+:where(.chat-page-container) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(.item-gallery, .item-details-gallery, .details-gallery) {
+  max-width: 100%;
+}
+
+:where(.browse-header-row, .subpage-header, .section-header-flex, .dash-section-header, .results-meta-bar) {
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+:where(.welcome-cta-group, .hero-action-buttons, .cta-actions, .profile-submit-row, .table-actions-cell) {
+  flex-wrap: wrap;
+}
+
+:where(.form-group, .form-input, .form-select, .form-textarea, .form-label) {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .auth-container-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Keep the complete authentication showcase visible; stack it above the form. */
+  .auth-showcase-panel {
+    display: block;
+    padding: clamp(var(--space-lg), 4vw, var(--space-3xl));
+  }
+
+  .browse-layout-grid,
+  .details-main-grid,
+  .profile-layout-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .browse-layout-grid {
+    gap: var(--space-lg);
+  }
+
+  .steps-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+
+  .dashboard-content-body {
+    padding: clamp(var(--space-sm), 3vw, var(--space-xl));
+  }
+
+  .conversation-list-panel {
+    width: min(42vw, 20rem);
+    flex-basis: min(42vw, 20rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: clamp(1.65rem, 8vw, var(--font-size-3xl));
+  }
+
+  .auth-form-card {
+    padding: clamp(var(--space-base), 4vw, var(--space-2xl));
+  }
+
+  .auth-showcase-panel {
+    border-radius: var(--radius-xl);
+  }
+
+  .chat-page-root {
+    padding: var(--space-xs);
+  }
+
+  .chat-page-container {
+    min-height: min(70vh, 550px);
+    height: auto;
+  }
+
+  .conversation-list-panel {
+    width: min(40vw, 15rem);
+    flex-basis: min(40vw, 15rem);
+  }
+
+  .cta-card {
+    padding: var(--space-xl) var(--space-base);
+  }
+
+  .profile-detail-row {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .data-table {
+    min-width: 34rem;
+  }
+
+  .section-title-left,
+  .browse-title {
+    font-size: clamp(1.35rem, 6vw, var(--font-size-2xl));
+  }
+}
+
+@media (max-width: 380px) {
+  .conversation-list-panel {
+    width: 38vw;
+    flex-basis: 38vw;
+  }
+
+  .conversation-list-header {
+    padding: var(--space-sm);
+  }
+
+  .conversation-item-btn {
+    padding-inline: var(--space-sm);
+  }
+}
+
+
+/* Keep safety guidance visible and scale the item gallery without cropping its container. */
+.chat-safety-pill {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.gallery-primary-wrap {
+  height: clamp(15rem, 38vw, 23.75rem);
+  max-width: 100%;
+}
+
+.gallery-thumbnails-row {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .chat-header,
+  .chat-input-row,
+  .chat-messages-stream {
+    padding-inline: var(--space-sm);
+  }
+
+  .details-breadcrumb {
+    flex-wrap: wrap;
+  }
+
+  .details-meta-header,
+  .my-post-notice,
+  .already-claimed-notice {
+    flex-wrap: wrap;
+  }
+
+  .meta-info-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gallery-primary-wrap {
+    height: clamp(13rem, 70vw, 20rem);
+  }
+}

@@ -5,7 +5,6 @@
   flex-direction: column;
 }
 
-
 .dashboard-layout-root {
   display: flex;
   flex: 1;
@@ -29,7 +28,6 @@
 .dashboard-layout-root .dashboard-sidebar::-webkit-scrollbar {
   display: none;
 }
-
 
 .dashboard-main-area {
   flex: 1;
@@ -72,17 +70,20 @@
 }
 
 .mobile-sidebar-drawer {
-  width: var(--sidebar-width);
+  width: min(var(--sidebar-width), 85vw);
   height: 100%;
 }
 
 .mobile-sidebar-drawer .dashboard-sidebar {
   display: flex;
+  width: 100%;
   height: 100%;
   min-height: 0;
   position: relative;
   top: 0;
-  overflow-y: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 @media (max-width: 900px) {
