@@ -12,7 +12,9 @@ const adminRoutes = require("./routes/adminRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.CLIENT_URL
+}));
 app.use(express.json());
 
 // Authentication Routes

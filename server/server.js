@@ -16,7 +16,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = new Server(server, {
     cors: {
-        origin: "*",
+        origin: process.env.CLIENT_URL,
         methods: ["GET", "POST"]
     }
 });
@@ -27,7 +27,7 @@ chatSocket(io);
 const startServer = async () => {
     await connectDB();
 
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
         console.log(`FindIt Server running on port ${PORT}`);
     });
 };
