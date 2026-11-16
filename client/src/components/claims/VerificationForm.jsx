@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Button from '../common/Button';
 import FormField from '../common/FormField';
@@ -6,46 +7,53 @@ import './VerificationForm.css';
 
 export const VerificationForm = ({
   item,
+  questions = [],
   onSubmit,
   onCancel,
   isLoading = false
 }) => {
-  const [q1, setQ1] = useState('');
-  const [q2, setQ2] = useState('');
-  const [q3, setQ3] = useState('');
+  const [answers, setAnswers] = useState({});
   const [errors, setErrors] = useState({});
+
+  const handleAnswerChange = (index, value) => {
+    setAnswers(prev => ({
+      ...prev,
+      [index]: value
+    }));
+  };
 
   const validate = () => {
     const errs = {};
-    if (!q1.trim()) errs.q1 = 'Please describe the brand, model, color or shape.';
-    if (!q2.trim()) errs.q2 = 'Please provide unique markings, contents, or serial numbers.';
-    if (!q3.trim()) errs.q3 = 'Please explain where and approximately when you misplaced it.';
+
+    questions.forEach((question, index) => {
+      const questionKey = question.index ?? index;
+
+      if (!answers[questionKey]?.trim()) {
+        errs[questionKey] = 'Please provide an answer to this question.';
+      }
+    });
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (!validate()) return;
 
-    const answers = [
-      {
-        question: 'What is the exact brand, model, exterior color or distinct physical shape?',
-        answer: q1.trim()
-      },
-      {
-        question: 'Are there any hidden identifying marks, personal contents, scratches or serial identifiers?',
-        answer: q2.trim()
-      },
-      {
-        question: 'When and where did you last have this item before misplacing it?',
-        answer: q3.trim()
-      }
-    ];
+    const submittedAnswers = questions.map((question, index) => {
+      const questionKey = question.index ?? index;
+
+      return {
+        question: question.question,
+        answer: answers[questionKey].trim()
+      };
+    });
 
     onSubmit({
       itemId: item._id,
-      answers
+      answers: submittedAnswers
     });
   };
 
@@ -61,56 +69,30 @@ export const VerificationForm = ({
         </div>
       </div>
 
-      <FormField
-        label="1. Brand, Model & Exact Physical Appearance"
-        htmlFor="q1"
-        required
-        error={errors.q1}
-        hint="e.g. Exact shade, case style, material finish, logos, stickers"
-      >
-        <textarea
-          id="q1"
-          rows={3}
-          className={`form-textarea ${errors.q1 ? 'has-error' : ''}`}
-          placeholder="Describe the exterior appearance in detail..."
-          value={q1}
-          onChange={(e) => setQ1(e.target.value)}
-        />
-      </FormField>
+      {questions.map((question, index) => {
+        const questionKey = question.index ?? index;
 
-      <FormField
-        label="2. Hidden Details, Inner Contents or Serial Markings"
-        htmlFor="q2"
-        required
-        error={errors.q2}
-        hint="e.g. Scratches, initials, cards inside, lockscreen background, unique tags"
-      >
-        <textarea
-          id="q2"
-          rows={3}
-          className={`form-textarea ${errors.q2 ? 'has-error' : ''}`}
-          placeholder="Describe distinctive internal or subtle features..."
-          value={q2}
-          onChange={(e) => setQ2(e.target.value)}
-        />
-      </FormField>
-
-      <FormField
-        label="3. Circumstances of Loss (Date, Time, Exact Location)"
-        htmlFor="q3"
-        required
-        error={errors.q3}
-        hint="Helps confirm your timeline aligns with when and where the item was discovered."
-      >
-        <textarea
-          id="q3"
-          rows={2}
-          className={`form-textarea ${errors.q3 ? 'has-error' : ''}`}
-          placeholder="e.g. Misplaced on Tuesday afternoon around 2 PM near table 4..."
-          value={q3}
-          onChange={(e) => setQ3(e.target.value)}
-        />
-      </FormField>
+        return (
+          <FormField
+            key={questionKey}
+            label={`${index + 1}. ${question.question}`}
+            htmlFor={`answer-${questionKey}`}
+            required
+            error={errors[questionKey]}
+          >
+            <textarea
+              id={`answer-${questionKey}`}
+              rows={3}
+              className={`form-textarea ${errors[questionKey] ? 'has-error' : ''}`}
+              placeholder="Enter your answer..."
+              value={answers[questionKey] || ''}
+              onChange={(e) =>
+                handleAnswerChange(questionKey, e.target.value)
+              }
+            />
+          </FormField>
+        );
+      })}
 
       <div className="verification-form-actions">
         {onCancel && (
@@ -118,6 +100,7 @@ export const VerificationForm = ({
             Cancel
           </Button>
         )}
+
         <Button type="submit" variant="primary" isLoading={isLoading}>
           Submit Ownership Claim
         </Button>
@@ -127,4 +110,3 @@ export const VerificationForm = ({
 };
 
 export default VerificationForm;
-

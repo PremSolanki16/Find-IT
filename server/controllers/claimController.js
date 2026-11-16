@@ -19,6 +19,7 @@ const emitNotification = (req, notification) => {
 
 
 // Create a new claim for a found item
+
 const createClaim = async (req, res) => {
     try {
         const { itemId, answers } = req.body;
@@ -60,20 +61,37 @@ const createClaim = async (req, res) => {
             });
         }
 
-        // Validate every verification question and answer
-        const hasInvalidAnswers = answers.some(
-            (entry) =>
-                !entry ||
-                typeof entry.question !== "string" ||
-                !entry.question.trim() ||
-                typeof entry.answer !== "string" ||
-                !entry.answer.trim()
+        // Get verification questions from the finder's saved private clues
+        const verificationClues = (item.privateClues || []).filter(
+            clue =>
+                clue &&
+                typeof clue === "object" &&
+                typeof clue.question === "string" &&
+                clue.question.trim() &&
+                typeof clue.expectedAnswer === "string" &&
+                clue.expectedAnswer.trim()
         );
 
-        if (hasInvalidAnswers) {
+        if (verificationClues.length === 0) {
+            return res.status(409).json({
+                success: false,
+                message: "Verification questions are not available for this item"
+            });
+        }
+
+        // Require exactly one non-empty answer for every saved question
+        if (
+            answers.length !== verificationClues.length ||
+            answers.some(
+                entry =>
+                    !entry ||
+                    typeof entry.answer !== "string" ||
+                    !entry.answer.trim()
+            )
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Every verification question must have an answer"
+                message: "Please answer every verification question"
             });
         }
 
@@ -90,10 +108,17 @@ const createClaim = async (req, res) => {
             });
         }
 
+        // Use authoritative question text from the database.
+        // Never expose or store the finder's expected answers in the claim.
+        const verifiedAnswers = verificationClues.map((clue, index) => ({
+            question: clue.question.trim(),
+            answer: answers[index].answer.trim()
+        }));
+
         const claim = await Claim.create({
             itemId,
             claimantId: req.user.id,
-            answers
+            answers: verifiedAnswers
         });
 
         item.status = "claim_pending";
@@ -111,7 +136,6 @@ const createClaim = async (req, res) => {
 
         // Deliver the notification in real time
         emitNotification(req, notification);
-
 
         return res.status(201).json({
             success: true,

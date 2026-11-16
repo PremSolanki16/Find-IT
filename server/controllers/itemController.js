@@ -2,6 +2,34 @@
 const Item = require("../models/Item");
 const cloudinary = require("../config/cloudinary");
 
+// Validate private verification clues for found items
+const validatePrivateClues = (type, privateClues) => {
+    if (type !== "found") {
+        return null;
+    }
+
+    if (!Array.isArray(privateClues) || privateClues.length === 0) {
+        return "At least one verification question is required for found items";
+    }
+
+    const hasInvalidClue = privateClues.some(
+        clue =>
+            !clue ||
+            typeof clue !== "object" ||
+            typeof clue.question !== "string" ||
+            !clue.question.trim() ||
+            typeof clue.expectedAnswer !== "string" ||
+            !clue.expectedAnswer.trim()
+    );
+
+    if (hasInvalidClue) {
+        return "Every verification clue must contain a question and expected answer";
+    }
+
+    return null;
+};
+
+
 // Upload received image files to Cloudinary and return their secure URLs
 const uploadItemImages = async (req, res) => {
     try {
@@ -81,7 +109,14 @@ const createItem = async (req, res) => {
                 message: "Please provide all required item details"
             });
         }
+        const clueError = validatePrivateClues(type, privateClues);
 
+        if (clueError) {
+            return res.status(400).json({
+                success: false,
+                message: clueError
+            });
+        }
         // Validate event date
         if (isNaN(Date.parse(eventDate))) {
             return res.status(400).json({
@@ -123,7 +158,7 @@ const createItem = async (req, res) => {
                 message: error.message
             });
         }
-
+console.error("Create Item Error:", error);
         res.status(500).json({
             success: false,
             message: "Failed to create item"
@@ -190,54 +225,129 @@ const getItemById = async (req, res) => {
     }
 };
 
-    // Get item details for editing after verifying ownership
-    const getItemForEdit = async (req, res) => {
-        try {
-            const { id } = req.params;
+// Get item details for editing after verifying ownership
+const getItemForEdit = async (req, res) => {
+    try {
+        const { id } = req.params;
 
-            const item = await Item.findById(id);
+        const item = await Item.findById(id);
 
-            if (!item) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Item not found"
-                });
-            }
-
-            if (item.createdBy.toString() !== req.user.id) {
-                return res.status(403).json({
-                    success: false,
-                    message: "You are not authorized to edit this item"
-                });
-            }
-
-            if (item.status !== "open") {
-                return res.status(403).json({
-                    success: false,
-                    message: "Only open items can be edited"
-                });
-            }
-
-            res.status(200).json({
-                success: true,
-                item
-            });
-
-        } catch (error) {
-            if (error.name === "CastError") {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid item ID"
-                });
-            }
-
-            res.status(500).json({
+        if (!item) {
+            return res.status(404).json({
                 success: false,
-                message: "Failed to fetch item for editing"
+                message: "Item not found"
             });
         }
-    };
 
+        if (item.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to edit this item"
+            });
+        }
+
+        if (item.status !== "open") {
+            return res.status(403).json({
+                success: false,
+                message: "Only open items can be edited"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            item
+        });
+
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid item ID"
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch item for editing"
+        });
+    }
+};
+
+// Get private verification questions for an eligible claimant
+const getItemClaimQuestions = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const item = await Item.findById(id);
+
+        if (!item || item.status === "removed" || item.status === "closed") {
+            return res.status(404).json({
+                success: false,
+                message: "Item not found or unavailable"
+            });
+        }
+
+        if (item.type !== "found") {
+            return res.status(400).json({
+                success: false,
+                message: "Verification questions are only available for found items"
+            });
+        }
+
+        if (item.createdBy.toString() === req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You cannot claim your own item"
+            });
+        }
+
+        if (item.status !== "open") {
+            return res.status(400).json({
+                success: false,
+                message: "This item is not currently accepting claims"
+            });
+        }
+
+        const questions = (item.privateClues || [])
+            .filter(clue =>
+                clue &&
+                typeof clue === "object" &&
+                typeof clue.question === "string" &&
+                clue.question.trim()
+            )
+            .map((clue, index) => ({
+                index,
+                question: clue.question
+            }));
+
+        if (questions.length === 0) {
+            return res.status(409).json({
+                success: false,
+                message: "Verification questions are not available for this item yet. Please contact the finder."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            questions
+        });
+
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid item ID"
+            });
+        }
+
+        console.error("Get Claim Questions Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch verification questions"
+        });
+    }
+};
 
 // Update an existing item
 const updateItem = async (req, res) => {
@@ -309,6 +419,19 @@ const updateItem = async (req, res) => {
                 item[field] = req.body[field];
             }
         });
+
+        // Validate private clues before saving
+        const clueError = validatePrivateClues(
+            item.type,
+            item.privateClues
+        );
+
+        if (clueError) {
+            return res.status(400).json({
+                success: false,
+                message: clueError
+            });
+        }
 
         // Save updated item
         await item.save();
@@ -401,5 +524,6 @@ module.exports = {
     getItemForEdit,
     updateItem,
     deleteItem,
-    uploadItemImages
+    uploadItemImages,
+    getItemClaimQuestions
 };

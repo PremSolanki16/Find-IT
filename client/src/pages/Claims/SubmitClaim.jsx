@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getItemByIdApi, submitClaimApi } from '../../services/api';
-import { useAuth } from '../../hooks/useAuth';
+import { getItemByIdApi, getItemClaimQuestionsApi, submitClaimApi } from '../../services/api';
+
 import VerificationForm from '../../components/claims/VerificationForm';
 import StatusBadge from '../../components/common/StatusBadge';
 import { MapPinIcon, CalendarIcon, ArrowLeftIcon } from '../../components/common/Icons';
@@ -12,6 +12,8 @@ export const SubmitClaim = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [questionsError, setQuestionsError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -23,9 +25,20 @@ export const SubmitClaim = () => {
       try {
         setIsLoading(true);
         setError('');
+        setQuestionsError('');
+        setQuestions([]);
 
         const response = await getItemByIdApi(id);
         setItem(response.item);
+
+        try {
+          const questionsResponse = await getItemClaimQuestionsApi(id);
+          setQuestions(questionsResponse.questions || []);
+        } catch (questionErr) {
+          setQuestionsError(
+            questionErr.message || 'Failed to load verification questions.'
+          );
+        }
       } catch (err) {
         setError(err.message || 'Failed to load item.');
       } finally {
@@ -147,12 +160,19 @@ export const SubmitClaim = () => {
           </div>
 
           {/* Verification Questionnaire */}
-          <VerificationForm
-            item={item}
-            onSubmit={handleClaimSubmit}
-            onCancel={() => navigate(-1)}
-            isLoading={isSubmitting}
-          />
+          {questionsError ? (
+            <div className="auth-alert error">
+              <span>⚠️ {questionsError}</span>
+            </div>
+          ) : (
+            <VerificationForm
+              item={item}
+              questions={questions}
+              onSubmit={handleClaimSubmit}
+              onCancel={() => navigate(-1)}
+              isLoading={isSubmitting}
+            />
+          )}
         </div>
       </div>
     </div>

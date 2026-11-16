@@ -96,6 +96,17 @@ export const getItemForEditApi = (itemId) => {
     });
 };
 
+// Get private verification questions for claiming a found item
+export const getItemClaimQuestionsApi = (itemId) => {
+    const token = localStorage.getItem("findit_token");
+
+    return apiRequest(`/items/${itemId}/claim-questions`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
 
 // Get all items from the backend
 export const getAllItemsApi = () => {

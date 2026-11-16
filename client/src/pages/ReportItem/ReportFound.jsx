@@ -25,8 +25,9 @@ export const ReportFound = () => {
   const [images, setImages] = useState([]);
   
   // Secret clues kept confidential for ownership verification
-  const [privateClues, setPrivateClues] = useState(['']);
-
+  const [privateClues, setPrivateClues] = useState([
+    { question: '', expectedAnswer: '' }
+  ]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -53,7 +54,18 @@ export const ReportFound = () => {
         setLocationDetails(item.locationDetails || '');
         setEventDate(item.eventDate ? item.eventDate.split('T')[0] : '');
         setImages(item.imageUrls || []);
-        setPrivateClues(item.privateClues?.length ? item.privateClues : ['']);
+        setPrivateClues(
+          item.privateClues?.length
+            ? item.privateClues.map((clue) =>
+                typeof clue === 'string'
+                  ? { question: '', expectedAnswer: clue }
+                  : {
+                      question: clue.question || '',
+                      expectedAnswer: clue.expectedAnswer || ''
+                    }
+              )
+            : [{ question: '', expectedAnswer: '' }]
+        );
       } catch (error) {
         setErrors({ form: error.message || 'Failed to load item details.' });
       } finally {
@@ -65,11 +77,18 @@ export const ReportFound = () => {
   }, [id, navigate]);
 
   const handleAddClue = () => {
-    setPrivateClues(prev => [...prev, '']);
+    setPrivateClues(prev => [
+      ...prev,
+      { question: '', expectedAnswer: '' }
+    ]);
   };
 
-  const handleClueChange = (index, value) => {
-    setPrivateClues(prev => prev.map((c, i) => i === index ? value : c));
+  const handleClueChange = (index, field, value) => {
+    setPrivateClues(prev =>
+      prev.map((clue, i) =>
+        i === index ? { ...clue, [field]: value } : clue
+      )
+    );
   };
 
   const handleRemoveClue = (index) => {
@@ -98,15 +117,33 @@ export const ReportFound = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
+      if (!validate()) return;
 
-    setIsSubmitting(true);
+  const enteredClues = privateClues.filter(
+    clue => clue.question.trim() || clue.expectedAnswer.trim()
+  );
 
-    try {
-      const filteredClues = privateClues
-        .map((clue) => clue.trim())
-        .filter(Boolean);
+  const hasIncompleteClue = enteredClues.some(
+    clue => !clue.question.trim() || !clue.expectedAnswer.trim()
+  );
 
+  if (hasIncompleteClue) {
+    setErrors({
+      privateClues: 'Please provide both a question and expected answer for each clue.'
+    });
+    return;
+  }
+
+  setErrors({});
+  const filteredClues = enteredClues.map(clue => ({
+    question: clue.question.trim(),
+    expectedAnswer: clue.expectedAnswer.trim()
+  }));
+
+  setIsSubmitting(true);
+
+  try {
+      
       // Keep existing image URLs and identify newly selected files
       const existingImageUrls = images.filter(
         (image) => typeof image === 'string'
@@ -302,10 +339,23 @@ export const ReportFound = () => {
                     <input
                       type="text"
                       className="form-input clue-field"
-                      placeholder={`Secret Clue ${idx + 1} (e.g. initials "PS" stamped inside, blue transit pass in slot)`}
-                      value={clue}
-                      onChange={(e) => handleClueChange(idx, e.target.value)}
+                      placeholder={`Question ${idx + 1} (e.g. What is written on the keychain?)`}
+                      value={clue.question}
+                      onChange={(e) =>
+                        handleClueChange(idx, 'question', e.target.value)
+                      }
                     />
+
+                    <input
+                      type="text"
+                      className="form-input clue-field"
+                      placeholder={`Expected Answer ${idx + 1}`}
+                      value={clue.expectedAnswer}
+                      onChange={(e) =>
+                        handleClueChange(idx, 'expectedAnswer', e.target.value)
+                      }
+                    />
+
                     {privateClues.length > 1 && (
                       <button
                         type="button"
@@ -318,6 +368,10 @@ export const ReportFound = () => {
                     )}
                   </div>
                 ))}
+
+                {errors.privateClues && (
+                  <p className="form-error">{errors.privateClues}</p>
+                )}
               </div>
 
               <button

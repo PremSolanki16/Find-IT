@@ -5,6 +5,7 @@ const {
     getAllItems,
     getItemById,
     getItemForEdit,
+    getItemClaimQuestions,
     updateItem,
     deleteItem,
     uploadItemImages
@@ -21,6 +22,8 @@ router.post("/", authMiddleware, createItem);
 router.get("/", getAllItems);
 // Get item details for editing (protected)
 router.get("/:id/edit", authMiddleware, getItemForEdit);
+// Get verification questions for claiming a found item (protected)
+router.get("/:id/claim-questions", authMiddleware, getItemClaimQuestions);
 // Get a single item by ID (public)
 router.get("/:id", getItemById);
 // Update an existing item (protected)

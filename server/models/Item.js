@@ -63,7 +63,7 @@ const itemSchema = new mongoose.Schema(
         },
 
         privateClues: {
-            type: [String],
+            type: [mongoose.Schema.Types.Mixed],
             default: []
         },
 
