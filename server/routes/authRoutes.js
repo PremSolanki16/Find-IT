@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const loginRateLimit = require("../middleware/loginRateLimit");
 
 const {
     registerUser,
@@ -15,7 +16,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.post("/register", registerUser);
 
 // Login route
-router.post("/login", loginUser);
+router.post("/login",loginRateLimit, loginUser);
 
 // Get current user route (protected)
 router.get("/me", authMiddleware, getCurrentUser);
