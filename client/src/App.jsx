@@ -14,6 +14,7 @@ import ItemDetails from './pages/ItemDetails/ItemDetails';
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 import ResetPassword from './pages/Auth/ResetPassword';
+import NotFound from './pages/NotFound/NotFound';
 
 // User Action Pages
 import ReportLost from './pages/ReportItem/ReportLost';
@@ -184,8 +185,8 @@ export const App = () => {
         <Route path="reports" element={<ManageReports />} />
       </Route>
 
-      {/* Fallback to Home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 404 Not Found Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </>
   );
